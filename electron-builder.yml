@@ -1,0 +1,21 @@
+appId: dev.oysterlee.kodepi
+productName: kodepi
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+  - node_modules/@lydell/node-pty/**
+  - node_modules/@lydell/node-pty-darwin-arm64/**
+# A .node binary cannot be loaded from inside the asar archive.
+asarUnpack:
+  - node_modules/@lydell/node-pty*/**
+# Only the target this has actually been built and run on. Windows and Linux
+# are absent rather than shipped untested.
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+  category: public.app-category.developer-tools

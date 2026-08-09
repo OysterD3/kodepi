@@ -1,0 +1,14 @@
+# esbuild needs its postinstall to fetch the platform binary. electron-winstaller
+# is a Windows-only transitive dep of electron-builder and is not a target here.
+allowBuilds:
+  esbuild: true
+  electron: true
+  electron-winstaller: false
+minimumReleaseAgeExclude:
+  - '@lydell/node-pty-darwin-arm64@1.2.0-beta.15'
+  - '@lydell/node-pty-darwin-x64@1.2.0-beta.15'
+  - '@lydell/node-pty-linux-arm64@1.2.0-beta.15'
+  - '@lydell/node-pty-linux-x64@1.2.0-beta.15'
+  - '@lydell/node-pty-win32-arm64@1.2.0-beta.15'
+  - '@lydell/node-pty-win32-x64@1.2.0-beta.15'
+  - '@lydell/node-pty@1.2.0-beta.15'

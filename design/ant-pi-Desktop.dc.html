@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html><head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+--desk:#000000;--rail:#131313;--surface:#1c1c1c;--card:#212121;--card-hi:#292929;--code-bg:#2b2b2b;--term:#101010;
+--fg-0:#f4f4f4;--fg-1:#d2d2d2;--fg-2:#a1a1a1;--fg-3:#767676;--fg-4:#565656;
+--line-1:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.11);--line-3:rgba(255,255,255,.17);
+--accent:#3b82f6;--accent-hi:#5a99ff;--on-accent:#ffffff;
+--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--info:#60a5fa;--violet:#a78bfa;
+--addbg:rgba(74,222,128,.10);--delbg:rgba(248,113,113,.09);
+--menu:oklch(25% .03 259);
+--sans:Inter,ui-sans-serif,system-ui,'Helvetica Neue',sans-serif;--code:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+[data-theme="day"]{
+--desk:#d8d8d8;--rail:#f6f6f6;--surface:#ffffff;--card:#fafafa;--card-hi:#f0f0f0;--code-bg:#f0f0f0;--term:#141414;
+--fg-0:#171717;--fg-1:#3f3f3f;--fg-2:#6b6b6b;--fg-3:#8f8f8f;--fg-4:#7d7d7d;
+--line-1:rgba(0,0,0,.08);--line-2:rgba(0,0,0,.12);--line-3:rgba(0,0,0,.18);
+--accent:#2563eb;--accent-hi:#1d4ed8;
+--ok:#16a34a;--bad:#dc2626;--warn:#b45309;--info:#2563eb;--violet:#7c3aed;
+--addbg:rgba(22,163,74,.09);--delbg:rgba(220,38,38,.07);
+--menu:oklch(95% .015 259);
+}
+body{margin:0;background:var(--desk);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hi)}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:rgba(160,160,160,.24);border-radius:9px;border:3px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-track{background:transparent}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(320%)}}
+</style>
+</helmet>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#131313"></rect><text x="50" y="66" font-family="ui-monospace,Menlo,monospace" font-size="42" font-weight="600" fill="#3b82f6" text-anchor="middle">π</text></svg></template>
+
+<div data-theme="{{ theme }}" style="min-height:100vh;background:var(--desk);display:flex;align-items:flex-start;justify-content:center;padding:40px">
+<div style="width:1600px;flex:none;height:1000px;background:var(--surface);border-radius:12px;overflow:hidden;border:1px solid var(--line-2);box-shadow:0 30px 70px -26px rgba(0,0,0,.7);display:flex;flex-direction:column;position:relative">
+
+<!-- titlebar -->
+<div style="height:54px;flex:none;display:flex;align-items:stretch;background:var(--rail);border-bottom:1px solid var(--line-1)">
+  <div style="width:268px;box-sizing:border-box;flex:none;display:flex;align-items:center;gap:13px;padding:0 16px;border-right:1px solid var(--line-1)">
+    <div style="display:flex;gap:8px;align-items:center;flex:none">
+      <div style="width:12px;height:12px;border-radius:50%;background:#FF5F57"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:#FEBC2E"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:#28C840"></div>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;min-width:0">
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;gap:10px;padding:0 12px 0 20px;min-width:0;background:var(--surface)">
+    <span style="font-size:16px;font-weight:500;color:var(--fg-0);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.title }}</span>
+    <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-2);background:var(--card-hi);border-radius:6px;padding:3px 7px;flex:none">{{ cur.project }}</span>
+    <sc-if value="{{ cur.running }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:7px;flex:none">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--info);animation:pulse 1.5s infinite"></div>
+        <span style="font-size:12px;font-weight:500;color:var(--info)">Working</span>
+        <span style="font-size:12px;color:var(--fg-3)">{{ cur.elapsed }}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ cur.waiting }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:7px;flex:none">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--warn)"></div>
+        <span style="font-size:12px;font-weight:500;color:var(--warn)">Needs approval</span>
+      </div>
+    </sc-if>
+    <div style="flex:1"></div>
+    <sc-if value="{{ cur.running }}" hint-placeholder-val="{{ true }}">
+      
+    </sc-if>
+    <div onClick="{{ toggleRight }}" title="Toggle inspector" style="width:30px;height:30px;display:grid;place-items:center;border-radius:8px;cursor:pointer;color:var(--fg-2);flex:none" style-hover="background:var(--card-hi);color:var(--fg-0)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M10.5 2.5v11"></path></svg>
+    </div>
+    <div style="position:relative;flex:none">
+      <div onClick="{{ toggleViewMenu }}" title="Transcript settings" style="width:30px;height:30px;display:grid;place-items:center;border-radius:8px;cursor:pointer;color:var(--fg-2)" style-hover="background:var(--card-hi);color:var(--fg-0)">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h7"></path></svg>
+      </div>
+      <sc-if value="{{ viewMenu }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeMenus }}" style="position:fixed;inset:0;z-index:18"></div>
+        <div style="position:absolute;top:36px;right:0;width:320px;background:var(--menu);border:1px solid var(--line-3);border-radius:12px;box-shadow:0 22px 48px -20px rgba(0,0,0,.7);padding:6px;z-index:20">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3);padding:7px 10px 8px">TRANSCRIPT</div>
+          <sc-for list="{{ viewOptions }}" as="o" hint-placeholder-count="2">
+            <div onClick="{{ o.click }}" style="display:flex;gap:11px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+              <div style="width:28px;height:17px;border-radius:9px;flex:none;margin-top:1px;background:{{ o.trackBg }};position:relative">
+                <div style="position:absolute;top:2px;left:{{ o.knobX }};width:13px;height:13px;border-radius:50%;background:#fff"></div>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                <div style="font-size:11.5px;color:var(--fg-3);margin-top:2px;line-height:1.45">{{ o.sub }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <div onClick="{{ toggleTheme }}" title="Toggle theme" style="width:30px;height:30px;display:grid;place-items:center;border-radius:8px;cursor:pointer;color:var(--fg-2);font-size:13px;flex:none" style-hover="background:var(--card-hi);color:var(--fg-0)">{{ themeGlyph }}</div>
+  </div>
+</div>
+
+<div style="flex:1;display:flex;min-height:0;position:relative">
+
+<!-- left rail -->
+<div style="width:268px;flex:none;background:var(--rail);border-right:1px solid var(--line-1);display:flex;flex-direction:column;min-height:0">
+  <div onClick="{{ openPalette }}" style="flex:none;display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer" style-hover="background:var(--card-hi)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" stroke-width="2.2" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+    <span style="font-size:13px;color:var(--fg-2)">Search</span>
+    <div style="flex:1"></div>
+    <span style="font-size:11.5px;color:var(--fg-4)">⌘K</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:6px;padding:14px 16px 6px;flex:none">
+    <span style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3)">PROJECTS</span>
+    <div style="flex:1"></div>
+    <div title="Sort" style="width:20px;height:20px;display:grid;place-items:center;border-radius:5px;cursor:pointer;color:var(--fg-3)" style-hover="background:var(--card-hi);color:var(--fg-0)">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4.5 12.5V3.5m0 0L2.5 6m2-2.5L6.5 6M11.5 3.5v9m0 0 2-2.5m-2 2.5-2-2.5"></path></svg>
+    </div>
+    <div onClick="{{ newSession }}" title="New session" style="width:20px;height:20px;display:grid;place-items:center;border-radius:5px;cursor:pointer;color:var(--fg-3)" style-hover="background:var(--card-hi);color:var(--fg-0)">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M1.8 4.2A1.4 1.4 0 0 1 3.2 2.8h2.4l1.3 1.6h5.9a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-1.4 1.4H3.2a1.4 1.4 0 0 1-1.4-1.4z"></path><path d="M8 7.6v3.2M6.4 9.2h3.2"></path></svg>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;min-height:0;padding-bottom:8px">
+    <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+      <div>
+        <div onClick="{{ p.toggle }}" style="display:flex;align-items:center;gap:9px;padding:6px 16px 6px 12px;cursor:pointer" style-hover="background:var(--card-hi)">
+          <span style="width:9px;font-size:9px;color:var(--fg-3);flex:none;line-height:1">{{ p.chev }}</span>
+          <div style="width:15px;height:15px;border-radius:5px;flex:none;background:var(--card-hi);position:relative;overflow:hidden">
+            <sc-if value="{{ p.tintBlue }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;background:var(--accent);opacity:.85"></div></sc-if>
+            <sc-if value="{{ p.tintGreen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:var(--ok);opacity:.8"></div></sc-if>
+            <sc-if value="{{ p.tintViolet }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:var(--violet);opacity:.8"></div></sc-if>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
+          <div style="flex:1"></div>
+          <sc-if value="{{ p.hasRunning }}" hint-placeholder-val="{{ false }}"><div style="width:5px;height:5px;border-radius:50%;background:var(--info);animation:pulse 1.6s infinite;flex:none"></div></sc-if>
+        </div>
+        <sc-if value="{{ p.open }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ p.sessions }}" as="s" hint-placeholder-count="4">
+              <div onClick="{{ s.click }}" style="position:relative;display:flex;align-items:center;gap:7px;padding:6px 12px 6px 40px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:var(--card-hi)"></div></sc-if>
+                <sc-if value="{{ s.showStatus }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:6px;flex:none;position:relative">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" stroke-width="1.6" style="flex:none"><circle cx="4" cy="3.5" r="2"></circle><circle cx="4" cy="12.5" r="2"></circle><circle cx="12" cy="8" r="2"></circle><path d="M4 5.5v5M6 8h4"></path></svg>
+                    <div style="width:6px;height:6px;border-radius:50%;flex:none;background:var(--fg-4);position:relative">
+                      <sc-if value="{{ s.running }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--info);animation:pulse 1.6s infinite"></div></sc-if>
+                      <sc-if value="{{ s.waiting }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--warn)"></div></sc-if>
+                      <sc-if value="{{ s.doneRecent }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--ok)"></div></sc-if>
+                      <sc-if value="{{ s.error }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--bad)"></div></sc-if>
+                    </div>
+                    <span style="font-size:12px;font-weight:500;color:var(--fg-2);white-space:nowrap">{{ s.statusWord }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;font-weight:600;color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;flex:1;min-width:0">{{ s.title }}</span></sc-if>
+                <sc-if value="{{ s.inactive }}" hint-placeholder-val="{{ true }}"><span style="font-size:12.5px;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;flex:1;min-width:0">{{ s.title }}</span></sc-if>
+                <span style="font-size:11px;color:var(--fg-4);flex:none;position:relative">{{ s.ago }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ p.more }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:5px 12px 8px 40px;font-size:12px;color:var(--fg-3);cursor:pointer" style-hover="color:var(--fg-0)">Show more</div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+
+  </div>
+
+  <div style="flex:none;border-top:1px solid var(--line-1);padding:12px 16px 10px;display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ usage }}" as="u" hint-placeholder-count="2">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-size:11.5px;color:var(--fg-2)">{{ u.label }}</span>
+          <div style="flex:1"></div>
+          <span style="font-size:11.5px;font-weight:500;color:var(--fg-0)">{{ u.left }}</span>
+        </div>
+        <div style="height:4px;border-radius:2px;background:var(--card-hi);overflow:hidden;margin-top:6px">
+          <div style="width:{{ u.w }};height:100%;background:{{ u.tint }}"></div>
+        </div>
+        <div style="font-size:11px;color:var(--fg-4);margin-top:5px">{{ u.reset }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div onClick="{{ openSettings }}" style="flex:none;display:flex;align-items:center;gap:11px;padding:11px 16px;border-top:1px solid var(--line-1);cursor:pointer" style-hover="background:var(--card-hi)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--fg-2)" stroke-width="1.7" style="flex:none"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3m0 14v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M2 12h3m14 0h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>
+    <span style="font-size:13px;color:var(--fg-1)">Settings</span>
+    <div style="flex:1"></div>
+    <span style="font-size:11px;color:var(--fg-4)">Lena C.</span>
+  </div>
+</div>
+
+<!-- center -->
+<div style="flex:1;display:flex;flex-direction:column;min-width:0;background:var(--surface)">
+  <div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding:26px 0 6px">
+
+    <sc-if value="{{ cur.isNew }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:700px;margin:0 auto;padding:78px 24px 0;text-align:center">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--accent);margin:0 auto 24px"></div>
+        <div style="font-size:30px;font-weight:500;letter-spacing:-.6px;color:var(--fg-0)">What should ant-pi work on?</div>
+        <div style="font-size:14.5px;color:var(--fg-2);margin-top:12px;line-height:1.55">A fresh worktree is cut from <span style="font-family:var(--code);font-size:13px;color:var(--fg-0);background:var(--code-bg);border-radius:6px;padding:2px 6px">main</span> for every session.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:34px;text-align:left">
+          <sc-for list="{{ suggestions }}" as="g" hint-placeholder-count="4">
+            <div onClick="{{ g.click }}" style="padding:14px 15px;border:1px solid var(--line-1);border-radius:12px;background:var(--card);cursor:pointer" style-hover="border-color:var(--line-3);background:var(--card-hi)">
+              <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ g.title }}</div>
+              <div style="font-size:12px;color:var(--fg-3);margin-top:5px;line-height:1.5">{{ g.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ cur.hasSteps }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:880px;margin:0 auto;padding:0 30px;display:flex;flex-direction:column;gap:18px">
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+        <div style="min-width:0">
+
+          <sc-if value="{{ s.isUser }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--card);border:1px solid var(--line-1);border-radius:12px;padding:13px 16px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3)">YOU</span>
+                <div style="flex:1"></div>
+                <sc-if value="{{ s.canRewind }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ s.openRewind }}" style="display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:7px;color:var(--fg-3);font-size:11.5px;font-weight:500;cursor:pointer" style-hover="background:var(--card-hi);color:var(--fg-0)">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 8a5.4 5.4 0 1 0 1.7-3.9"></path><path d="M2.4 3.1v3h3"></path></svg>
+                    <span>Rewind</span>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="font-size:14px;line-height:1.55;color:var(--fg-0);text-wrap:pretty">{{ s.text }}</div>
+              <sc-if value="{{ s.rewindOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:12px;border-top:1px solid var(--line-1);padding-top:12px">
+                  <div style="font-size:12.5px;color:var(--fg-2);margin-bottom:9px">Rewind to this message. Everything after it is discarded.</div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div onClick="{{ s.rewindChat }}" style="display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid var(--line-1);border-radius:10px;background:var(--card-hi);cursor:pointer" style-hover="border-color:var(--line-3)">
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:13px;font-weight:500;color:var(--fg-0)">Conversation only</div>
+                        <div style="font-size:12px;color:var(--fg-3);margin-top:3px">{{ s.rewindChatSub }}</div>
+                      </div>
+                    </div>
+                    <div onClick="{{ s.rewindCode }}" style="display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid var(--line-1);border-radius:10px;background:var(--card-hi);cursor:pointer" style-hover="border-color:var(--line-3)">
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:13px;font-weight:500;color:var(--fg-0)">Conversation and code</div>
+                        <div style="font-size:12px;color:var(--fg-3);margin-top:3px">{{ s.rewindCodeSub }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div onClick="{{ s.cancelRewind }}" style="display:inline-flex;align-items:center;height:26px;padding:0 10px;margin-top:9px;border-radius:7px;font-size:12px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card-hi);color:var(--fg-0)">Cancel</div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isRewind }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:11px">
+              <div style="height:1px;flex:none;width:22px;background:var(--line-2)"></div>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--warn);flex:none">REWOUND</span>
+              <span style="font-size:12.5px;color:var(--fg-3)">{{ s.text }}</span>
+              <div style="height:1px;flex:1;background:var(--line-2)"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isText }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:14.5px;line-height:1.65;color:var(--fg-1);text-wrap:pretty">
+              <sc-for list="{{ s.parts }}" as="w" hint-placeholder-count="1"><sc-if value="{{ w.plain }}" hint-placeholder-val="{{ true }}"><span>{{ w.t }}</span></sc-if><sc-if value="{{ w.code }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--code);font-size:13px;color:var(--fg-0);background:var(--code-bg);border-radius:6px;padding:2px 6px">{{ w.t }}</span></sc-if></sc-for><sc-if value="{{ s.streaming }}" hint-placeholder-val="{{ false }}"><span style="display:inline-block;width:7px;height:15px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(1) infinite"></span></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isWf }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ s.wfClick }}" style="border:1px solid {{ s.wfBorder }};border-radius:12px;background:var(--card);padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:var(--line-3);background:var(--card-hi)">
+              <span style="font-size:13px;color:var(--violet);flex:none">◈</span>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">
+                  <span style="font-size:13.5px;font-weight:600;color:var(--fg-0)">{{ s.wf.label }}</span>
+                  <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-3)">{{ s.wf.name }}</span>
+                  <span style="font-size:12px;font-weight:500;color:{{ s.wf.statusColor }}">{{ s.wf.status }}</span>
+                  <span style="font-size:12px;color:var(--fg-3)">{{ s.wf.clock }}</span>
+                </div>
+                <div style="font-size:12.5px;color:var(--fg-2);margin-top:4px">{{ s.wf.phaseLabel }} · {{ s.wf.agentsLabel }} · {{ s.wf.cost }}</div>
+                <div style="display:flex;gap:4px;margin-top:9px">
+                  <sc-for list="{{ s.wf.pips }}" as="q" hint-placeholder-count="4">
+                    <div title="{{ q.name }}" style="flex:1;height:3px;border-radius:2px;background:{{ q.color }}"></div>
+                  </sc-for>
+                </div>
+              </div>
+              <span style="font-size:12px;color:var(--fg-3);flex:none">{{ s.wfCta }}</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isAdvise }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-1);border-left:2px solid var(--violet);border-radius:0 12px 12px 0;background:var(--card)">
+              <div onClick="{{ s.toggle }}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--violet);flex:none">ADVISOR</span>
+                <span style="font-size:13px;color:var(--fg-1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.text }}</span>
+                <span style="font-size:11.5px;color:var(--fg-4);flex:none">{{ s.meta }}</span>
+                <span style="font-size:9px;color:var(--fg-3);width:10px;text-align:center;flex:none">{{ s.chev }}</span>
+              </div>
+              <sc-if value="{{ s.open }}" hint-placeholder-val="{{ true }}">
+                <div style="border-top:1px solid var(--line-1);padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+                  <div style="font-size:12px;color:var(--fg-3)">{{ s.trigger }}</div>
+                  <sc-for list="{{ s.body }}" as="b" hint-placeholder-count="3">
+                    <div style="font-size:13.5px;line-height:1.6;color:var(--fg-1);text-wrap:pretty">{{ b.t }}</div>
+                  </sc-for>
+                  <div style="display:flex;align-items:center;gap:9px;padding-top:10px;border-top:1px solid var(--line-1)">
+                    <span style="font-size:11.5px;color:var(--fg-3)">Guidance applied — the advisor made no edits</span>
+                    <div style="flex:1"></div>
+                    <span style="font-size:11.5px;color:var(--fg-4)">{{ s.cost }}</span>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isThink }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div onClick="{{ s.toggle }}" style="display:inline-flex;align-items:center;gap:9px;padding:3px 8px;margin-left:-8px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-3);flex:none">THINKING</span>
+                <span style="font-size:13px;color:var(--fg-2)">{{ s.text }}</span>
+                <span style="font-size:12px;color:var(--fg-4)">{{ s.meta }}</span>
+                <span style="font-size:9px;color:var(--fg-3);width:10px;text-align:center;flex:none">{{ s.chev }}</span>
+              </div>
+              <sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:8px;padding-left:13px;border-left:1px solid var(--line-2);display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ s.body }}" as="b" hint-placeholder-count="3">
+                    <div style="font-size:13.5px;line-height:1.6;color:var(--fg-2);text-wrap:pretty">{{ b.t }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isGroup }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ s.toggleGroup }}" style="display:inline-flex;align-items:center;gap:10px;padding:4px 9px;margin-left:-9px;border-radius:8px;cursor:pointer;max-width:100%" style-hover="background:var(--card-hi)">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-3);flex:none">{{ s.groupCount }}</span>
+              <span style="font-size:13px;color:var(--fg-2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.groupText }}</span>
+              <sc-if value="{{ s.hasDiff }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family:var(--code);font-size:11.5px;color:var(--ok);flex:none">{{ s.addTxt }}</span>
+                <span style="font-family:var(--code);font-size:11.5px;color:var(--bad);flex:none">{{ s.delTxt }}</span>
+              </sc-if>
+              <span style="font-size:9px;color:var(--fg-3);width:10px;text-align:center;flex:none">{{ s.chev }}</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isRead }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-3);flex:none">READ</span>
+              <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-1);background:var(--code-bg);border-radius:6px;padding:2px 7px">{{ s.file }}</span>
+              <span style="font-size:12px;color:var(--fg-4)">{{ s.meta }}</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isEdit }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-1);border-radius:12px;background:var(--card);overflow:hidden">
+              <div onClick="{{ s.toggle }}" style="display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-3);flex:none">EDIT</span>
+                <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.file }}</span>
+                <div style="flex:1"></div>
+                <span style="font-family:var(--code);font-size:11.5px;color:var(--ok)">{{ s.addTxt }}</span>
+                <span style="font-family:var(--code);font-size:11.5px;color:var(--bad)">{{ s.delTxt }}</span>
+                <span style="font-size:9px;color:var(--fg-3);width:10px;text-align:center">{{ s.chev }}</span>
+              </div>
+              <sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
+                <div style="border-top:1px solid var(--line-1);font-family:var(--code);font-size:11.5px;line-height:1.8;padding:6px 0">
+                  <sc-for list="{{ s.diff }}" as="d" hint-placeholder-count="4">
+                    <div style="display:flex;padding:0 13px">
+                      <sc-if value="{{ d.add }}" hint-placeholder-val="{{ true }}"><div style="display:flex;width:100%;background:var(--addbg)"><span style="width:15px;color:var(--ok);flex:none">+</span><span style="color:var(--fg-0);white-space:pre">{{ d.c }}</span></div></sc-if>
+                      <sc-if value="{{ d.del }}" hint-placeholder-val="{{ false }}"><div style="display:flex;width:100%;background:var(--delbg)"><span style="width:15px;color:var(--bad);flex:none">−</span><span style="color:var(--fg-2);white-space:pre">{{ d.c }}</span></div></sc-if>
+                      <sc-if value="{{ d.ctx }}" hint-placeholder-val="{{ false }}"><div style="display:flex;width:100%"><span style="width:15px;color:var(--fg-4);flex:none"> </span><span style="color:var(--fg-3);white-space:pre">{{ d.c }}</span></div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isRun }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-1);border-radius:12px;overflow:hidden;background:var(--term)">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.06)">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-4);flex:none">RUN</span>
+                <span style="font-family:var(--code);font-size:12.5px;color:#ededed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.cmd }}</span>
+                <div style="flex:1"></div>
+                <span style="font-family:var(--code);font-size:11px;color:#6e6e6e">{{ s.dur }}</span>
+                <sc-if value="{{ s.ok }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--code);font-size:11px;color:#4ade80">exit 0</span></sc-if>
+                <sc-if value="{{ s.fail }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--code);font-size:11px;color:#f87171">exit 1</span></sc-if>
+              </div>
+              <div style="padding:10px 13px;font-family:var(--code);font-size:11.5px;line-height:1.75">
+                <sc-for list="{{ s.out }}" as="o" hint-placeholder-count="3">
+                  <div style="display:flex;overflow:hidden">
+                    <sc-if value="{{ o.pass }}" hint-placeholder-val="{{ true }}"><span style="color:#7fe0ad;white-space:pre;overflow:hidden;text-overflow:ellipsis">{{ o.t }}</span></sc-if>
+                    <sc-if value="{{ o.dim }}" hint-placeholder-val="{{ false }}"><span style="color:#8a8a8a;white-space:pre;overflow:hidden;text-overflow:ellipsis">{{ o.t }}</span></sc-if>
+                    <sc-if value="{{ o.err }}" hint-placeholder-val="{{ false }}"><span style="color:#f87171;white-space:pre;overflow:hidden;text-overflow:ellipsis">{{ o.t }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isSpawn }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-1);border-radius:12px;background:var(--card);padding:13px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--fg-3);flex:none">SUBAGENTS</span>
+                <span style="font-size:12.5px;color:var(--fg-2)">{{ s.text }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ s.agents }}" as="a" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:9px;background:var(--card-hi)">
+                    <div style="width:6px;height:6px;border-radius:50%;background:var(--info);flex:none"></div>
+                    <span style="font-family:var(--code);font-size:12px;color:var(--fg-0);width:126px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                    <span style="font-size:12px;color:var(--fg-3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.task }}</span>
+                    <div style="width:56px;height:3px;border-radius:2px;background:var(--line-2);flex:none;overflow:hidden">
+                      <div style="width:{{ a.pctW }};height:100%;background:var(--info)"></div>
+                    </div>
+                    <span style="font-size:11px;color:var(--fg-4);width:34px;text-align:right;flex:none">{{ a.tokens }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isQuestion }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-2);border-radius:12px;background:var(--card);padding:14px 15px 13px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--accent);flex:none">QUESTION</span>
+                <span style="font-size:12px;color:var(--fg-3)">{{ s.meta }}</span>
+              </div>
+              <div style="font-size:14.5px;line-height:1.55;color:var(--fg-0);margin-top:9px;text-wrap:pretty">{{ s.text }}</div>
+              <sc-if value="{{ s.unanswered }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:13px">
+                  <sc-for list="{{ s.options }}" as="o" hint-placeholder-count="3">
+                    <div onClick="{{ o.click }}" style="display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line-1);border-radius:10px;cursor:pointer" style-hover="border-color:var(--line-3);background:var(--card-hi)">
+                      <div style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--line-3);flex:none;margin-top:1px"></div>
+                      <div style="min-width:0">
+                        <div style="font-size:13.5px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                        <div style="font-size:12px;color:var(--fg-3);margin-top:3px;line-height:1.5">{{ o.sub }}</div>
+                      </div>
+                      <div style="flex:1"></div>
+                      <span style="font-size:11px;color:var(--fg-4);flex:none;margin-top:2px">{{ o.key }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size:11.5px;color:var(--fg-4);margin-top:11px">Pick one, or answer in your own words below.</div>
+              </sc-if>
+              <sc-if value="{{ s.answered }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:9px;margin-top:12px;padding:9px 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--card-hi)">
+                  <div style="width:15px;height:15px;border-radius:50%;border:4.5px solid var(--accent);box-sizing:border-box;flex:none"></div>
+                  <span style="font-size:13.5px;font-weight:500;color:var(--fg-0)">{{ s.answer }}</span>
+                  <div style="flex:1"></div>
+                  <span style="font-size:11.5px;color:var(--fg-4)">your answer</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isAsk }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--line-2);border-radius:12px;background:var(--card);padding:14px 15px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--warn);flex:none">APPROVAL</span>
+                <span style="font-size:13.5px;font-weight:500;color:var(--fg-0)">{{ s.title }}</span>
+              </div>
+              <div style="font-size:13px;color:var(--fg-2);line-height:1.55;margin-top:8px">{{ s.text }}</div>
+              <div style="margin-top:11px;padding:11px 13px;border-radius:9px;background:var(--term);font-family:var(--code);font-size:12.5px;color:#ededed;white-space:pre-wrap;word-break:break-all">{{ s.cmd }}</div>
+              <div style="display:flex;gap:8px;margin-top:13px;align-items:center">
+                <div onClick="{{ approve }}" style="height:31px;padding:0 15px;display:flex;align-items:center;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="background:var(--accent-hi)">Allow once</div>
+                <div onClick="{{ approve }}" style="height:31px;padding:0 14px;display:flex;align-items:center;gap:7px;border-radius:8px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:var(--line-3);color:var(--fg-0)">Always allow<span style="font-family:var(--code);font-size:11.5px;color:var(--fg-3)">pnpm</span></div>
+                <div onClick="{{ deny }}" style="height:31px;padding:0 14px;display:flex;align-items:center;border-radius:8px;border:1px solid var(--line-1);color:var(--fg-3);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:var(--line-3);color:var(--fg-1)">Deny</div>
+                <div style="flex:1"></div>
+                <span style="font-size:11.5px;color:var(--fg-4)">⏎ allow · esc deny</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s.isDone }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:14.5px;line-height:1.65;color:var(--fg-1);margin-bottom:14px"><sc-for list="{{ s.parts }}" as="w" hint-placeholder-count="1"><sc-if value="{{ w.plain }}" hint-placeholder-val="{{ true }}"><span>{{ w.t }}</span></sc-if><sc-if value="{{ w.code }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--code);font-size:13px;color:var(--fg-0);background:var(--code-bg);border-radius:6px;padding:2px 6px">{{ w.t }}</span></sc-if></sc-for></div>
+              <div style="border:1px solid var(--line-1);border-radius:12px;background:var(--card);padding:13px 15px 15px">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3)">CHANGED FILES ({{ s.fileCount }})</span>
+                  <span style="font-size:11px;color:var(--fg-4)">·</span>
+                  <span style="font-family:var(--code);font-size:11.5px;color:var(--ok)">{{ s.addTxt }}</span>
+                  <span style="font-family:var(--code);font-size:11.5px;color:var(--bad)">{{ s.delTxt }}</span>
+                  <div style="flex:1"></div>
+                  <div style="height:27px;padding:0 11px;display:flex;align-items:center;border-radius:7px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12px;font-weight:500;cursor:pointer" style-hover="border-color:var(--line-3);color:var(--fg-0)">Collapse all</div>
+                  <div onClick="{{ showDiff }}" style="height:27px;padding:0 11px;display:flex;align-items:center;border-radius:7px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12px;font-weight:500;cursor:pointer" style-hover="border-color:var(--line-3);color:var(--fg-0)">View diff</div>
+                </div>
+                <div style="display:flex;flex-direction:column;margin-top:11px">
+                  <sc-for list="{{ s.tree }}" as="t" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;gap:8px;height:26px;padding-left:{{ t.pad }};cursor:pointer" style-hover="background:var(--card-hi)">
+                      <sc-if value="{{ t.folder }}" hint-placeholder-val="{{ true }}">
+                        <span style="width:9px;font-size:9px;color:var(--fg-3);flex:none">▾</span>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" stroke-width="1.4" stroke-linejoin="round" style="flex:none"><path d="M1.8 4.2A1.4 1.4 0 0 1 3.2 2.8h2.4l1.3 1.6h5.9a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-1.4 1.4H3.2a1.4 1.4 0 0 1-1.4-1.4z"></path></svg>
+                        <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-1)">{{ t.name }}</span>
+                      </sc-if>
+                      <sc-if value="{{ t.file }}" hint-placeholder-val="{{ false }}">
+                        <span style="width:9px;flex:none"> </span>
+                        <span style="width:16px;height:16px;flex:none;border-radius:4px;background:var(--card-hi);display:grid;place-items:center;font-family:var(--code);font-size:7.5px;font-weight:500;color:{{ t.tint }}">{{ t.ext }}</span>
+                        <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                      </sc-if>
+                      <div style="flex:1"></div>
+                      <span style="font-family:var(--code);font-size:11.5px;color:var(--ok);flex:none">{{ t.add }}</span>
+                      <span style="font-family:var(--code);font-size:11.5px;color:var(--bad);flex:none;padding-right:4px">{{ t.del }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+                <span style="font-size:11.5px;color:var(--fg-4)">{{ s.at }}</span>
+                <span style="font-size:11.5px;color:var(--fg-4)">·</span>
+                <span style="font-size:11.5px;color:var(--fg-4)">{{ s.dur }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </sc-for>
+
+      <sc-if value="{{ cur.running }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:10px;height:20px">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--info);animation:pulse 1.2s infinite;flex:none"></div>
+          <span style="font-size:13px;color:var(--fg-3)">{{ cur.activity }}</span>
+          <div style="width:72px;height:3px;background:var(--card-hi);border-radius:2px;overflow:hidden;position:relative">
+            <div style="position:absolute;inset:0;width:30%;background:var(--info);animation:sweep 1.3s linear infinite"></div>
+          </div>
+        </div>
+      </sc-if>
+      <div style="height:10px"></div>
+    </div>
+    </sc-if>
+  </div>
+
+  <!-- composer -->
+  <div style="flex:none;padding:0 30px 18px">
+    <div style="max-width:880px;margin:0 auto;border:1px solid var(--line-2);border-radius:16px;background:var(--card)">
+      <textarea value="{{ composer }}" onChange="{{ onCompose }}" onKeyDown="{{ onComposeKey }}" placeholder="{{ placeholder }}" style="width:100%;box-sizing:border-box;border:0;outline:0;resize:none;background:transparent;color:var(--fg-0);font-family:var(--sans);font-size:15px;line-height:1.55;padding:16px 18px 8px;height:76px"></textarea>
+      <div style="display:flex;align-items:center;gap:2px;padding:4px 10px 9px">
+
+        <div style="position:relative;flex:none">
+          <div onClick="{{ toggleModelMenu }}" style="height:26px;padding:0 7px;display:flex;align-items:center;gap:6px;border-radius:7px;cursor:pointer" style-hover="background:var(--card-hi)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="var(--warn)" style="flex:none"><path d="M8 1.2l1.5 4.1 4.3.5-3.3 2.8 1 4.2L8 10.6l-3.5 2.2 1-4.2L2.2 5.8l4.3-.5z"></path></svg>
+            <span style="font-size:12px;font-weight:500;color:var(--fg-1)">{{ modelLabel }}</span>
+            <span style="font-size:7px;color:var(--fg-4)">▾</span>
+          </div>
+          <sc-if value="{{ modelMenu }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ closeMenus }}" style="position:fixed;inset:0;z-index:18"></div>
+            <div style="position:absolute;bottom:32px;left:0;width:290px;background:var(--menu);border:1px solid var(--line-3);border-radius:12px;box-shadow:0 22px 48px -20px rgba(0,0,0,.7);padding:6px;z-index:20">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3);padding:7px 10px 8px">MODEL</div>
+              <sc-for list="{{ modelOptions }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.click }}" style="display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+                  <span style="width:12px;flex:none;font-size:11px;color:var(--accent);padding-top:2px">{{ o.check }}</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                    <div style="font-size:11.5px;color:var(--fg-3);margin-top:2px;line-height:1.45">{{ o.sub }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="position:relative;flex:none">
+          <div onClick="{{ toggleEffortMenu }}" style="height:26px;padding:0 7px;display:flex;align-items:center;gap:6px;border-radius:7px;cursor:pointer" style-hover="background:var(--card-hi)">
+            <div style="display:flex;align-items:flex-end;gap:1.5px;height:10px">
+              <sc-if value="{{ bar1 }}" hint-placeholder-val="{{ true }}"><div style="width:2.5px;height:4px;background:var(--fg-2)"></div></sc-if>
+              <sc-if value="{{ bar1off }}" hint-placeholder-val="{{ false }}"><div style="width:2.5px;height:4px;background:var(--line-3)"></div></sc-if>
+              <sc-if value="{{ bar2 }}" hint-placeholder-val="{{ true }}"><div style="width:2.5px;height:7px;background:var(--fg-2)"></div></sc-if>
+              <sc-if value="{{ bar2off }}" hint-placeholder-val="{{ false }}"><div style="width:2.5px;height:7px;background:var(--line-3)"></div></sc-if>
+              <sc-if value="{{ bar3 }}" hint-placeholder-val="{{ true }}"><div style="width:2.5px;height:10px;background:var(--fg-2)"></div></sc-if>
+              <sc-if value="{{ bar3off }}" hint-placeholder-val="{{ false }}"><div style="width:2.5px;height:10px;background:var(--line-3)"></div></sc-if>
+            </div>
+            <span style="font-size:12px;font-weight:500;color:var(--fg-1)">{{ effortLabel }}</span>
+            <span style="font-size:7px;color:var(--fg-4)">▾</span>
+          </div>
+          <sc-if value="{{ effortMenu }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ closeMenus }}" style="position:fixed;inset:0;z-index:18"></div>
+            <div style="position:absolute;bottom:32px;left:0;width:288px;background:var(--menu);border:1px solid var(--line-3);border-radius:12px;box-shadow:0 22px 48px -20px rgba(0,0,0,.7);padding:14px 16px 16px;z-index:20">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px;color:var(--fg-3)">Effort</span>
+                <span style="font-size:13px;font-weight:500;color:var(--fg-0);flex:1">{{ effortName }}</span>
+                <div title="Levels available depend on the model" style="width:15px;height:15px;flex:none;border-radius:50%;border:1px solid var(--line-3);display:grid;place-items:center;font-size:9.5px;color:var(--fg-3);cursor:default">?</div>
+              </div>
+              <div style="display:flex;align-items:baseline;margin-top:12px">
+                <span style="font-size:11.5px;color:var(--fg-3)">Faster</span>
+                <div style="flex:1"></div>
+                <span style="font-size:11.5px;color:var(--fg-3)">Smarter</span>
+              </div>
+              <div onMouseEnter="{{ effortHoverOn }}" onMouseLeave="{{ effortHoverOff }}" style="position:relative;height:26px;margin-top:4px;display:flex;align-items:center">
+                <div style="position:absolute;left:0;right:0;height:26px;border-radius:8px;background:var(--card-hi);overflow:hidden">
+                  <div style="position:absolute;left:0;top:0;bottom:0;background:var(--violet);opacity:.55;width:calc(13px + {{ effortIdx }} * (100% - 26px) / 5)"></div>
+                </div>
+                <sc-for list="{{ effortTicks }}" as="t" hint-placeholder-count="6">
+                  <div style="position:absolute;left:calc(13px + {{ t.at }} * (100% - 26px) / 100);width:4px;height:4px;margin-left:-2px;border-radius:50%;background:{{ t.fill }}"></div>
+                </sc-for>
+                <div style="position:absolute;left:calc(13px + {{ effortIdx }} * (100% - 26px) / 5);width:20px;height:20px;margin-left:-10px;border-radius:6px;background:#b9b9b9;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>
+                <sc-if value="{{ effortHover }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;bottom:26px;left:calc(13px + {{ effortIdx }} * (100% - 26px) / 5);transform:translateX(-50%);background:var(--card-hi);border:1px solid var(--line-2);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--fg-0);white-space:nowrap;box-shadow:0 4px 14px -4px rgba(0,0,0,.6)">{{ effortName }}</div>
+                </sc-if>
+                <input type="range" min="0" max="5" step="1" value="{{ effortIdx }}" onInput="{{ setEffort }}" style="position:absolute;left:0;width:100%;height:26px;margin:0;opacity:0;cursor:pointer">
+              </div>
+              <div style="margin-top:12px;font-size:11.5px;color:var(--fg-3);line-height:1.45">{{ effortBudget }} · {{ effortModelNote }}</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="position:relative;flex:none">
+          <div onClick="{{ toggleAccessMenu }}" style="height:26px;padding:0 7px;display:flex;align-items:center;gap:6px;border-radius:7px;cursor:pointer" style-hover="background:var(--card-hi)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" stroke-width="1.5" stroke-linejoin="round" style="flex:none"><rect x="3" y="7" width="10" height="7" rx="1.6"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>
+            <span style="font-size:12px;font-weight:500;color:var(--fg-1)">{{ accessLabel }}</span>
+            <span style="font-size:7px;color:var(--fg-4)">▾</span>
+          </div>
+          <sc-if value="{{ accessMenu }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ closeMenus }}" style="position:fixed;inset:0;z-index:18"></div>
+            <div style="position:absolute;bottom:32px;left:0;width:296px;background:var(--menu);border:1px solid var(--line-3);border-radius:12px;box-shadow:0 22px 48px -20px rgba(0,0,0,.7);padding:6px;z-index:20">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3);padding:7px 10px 8px">PERMISSIONS</div>
+              <sc-for list="{{ accessOptions }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.click }}" style="display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+                  <span style="width:12px;flex:none;font-size:11px;color:var(--accent);padding-top:2px">{{ o.check }}</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                    <div style="font-size:11.5px;color:var(--fg-3);margin-top:2px;line-height:1.45">{{ o.sub }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="flex:1"></div>
+
+        <div style="position:relative;flex:none;min-width:0">
+          <div onClick="{{ toggleBranchMenu }}" style="height:26px;padding:0 7px;display:flex;align-items:center;gap:6px;border-radius:7px;cursor:pointer;min-width:0" style-hover="background:var(--card-hi)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" stroke-width="1.5" style="flex:none"><circle cx="4" cy="3.5" r="2"></circle><circle cx="4" cy="12.5" r="2"></circle><circle cx="12" cy="8" r="2"></circle><path d="M4 5.5v5M6 8h4"></path></svg>
+            <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.branch }}</span>
+            <span style="font-size:7px;color:var(--fg-4);flex:none">▾</span>
+          </div>
+          <sc-if value="{{ branchMenu }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ closeMenus }}" style="position:fixed;inset:0;z-index:18"></div>
+            <div style="position:absolute;bottom:32px;right:0;width:288px;background:var(--menu);border:1px solid var(--line-3);border-radius:12px;box-shadow:0 22px 48px -20px rgba(0,0,0,.7);padding:6px;z-index:20">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3);padding:7px 10px 8px">BRANCH</div>
+              <sc-for list="{{ branchOptions }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.click }}" style="display:flex;gap:9px;align-items:center;padding:8px 10px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+                  <span style="width:12px;flex:none;font-size:11px;color:var(--accent)">{{ o.check }}</span>
+                  <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-0);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.name }}</span>
+                  <span style="font-size:11.5px;color:var(--fg-3);flex:none">{{ o.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div title="{{ ctxTitle }}" style="height:26px;padding:0 7px;display:flex;align-items:center;gap:6px;flex:none">
+          <div style="width:14px;height:14px;flex:none;position:relative">
+            <svg width="14" height="14" viewBox="0 0 14 14" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="7" cy="7" r="5.4" fill="none" stroke="var(--line-3)" stroke-width="1.8"></circle><circle cx="7" cy="7" r="5.4" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="{{ ctxDash }}"></circle></svg>
+          </div>
+          <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-2)">{{ ctxUsed }}</span>
+        </div>
+
+        <div onClick="{{ send }}" title="Send" style="width:30px;height:30px;flex:none;border-radius:50%;background:var(--accent);display:grid;place-items:center;cursor:pointer;margin-left:4px" style-hover="background:var(--accent-hi)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--on-accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3.5"></path><path d="m4 7.5 4-4 4 4"></path></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- right inspector -->
+<sc-if value="{{ rightOpen }}" hint-placeholder-val="{{ true }}">
+  <div style="width:{{ rightW }}px;flex:none;min-width:0">
+    <div style="height:100%;background:var(--rail);border-left:1px solid var(--line-1);display:flex;flex-direction:column;min-height:0">
+      <div style="height:54px;flex:none;display:flex;align-items:center;gap:2px;padding:0 8px 0 10px;border-bottom:1px solid var(--line-1)">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <div onClick="{{ t.click }}" style="position:relative;height:30px;padding:0 11px;display:flex;align-items:center;gap:7px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+            <sc-if value="{{ t.active }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;border-radius:8px;background:var(--card-hi)"></div></sc-if>
+            <span style="font-size:12.5px;font-weight:500;color:var(--fg-1);position:relative">{{ t.label }}</span>
+            <span style="font-size:11px;color:var(--fg-3);position:relative">{{ t.count }}</span>
+          </div>
+        </sc-for>
+        <div style="flex:1"></div>
+        <div onClick="{{ toggleWide }}" title="Expand" style="width:28px;height:28px;display:grid;place-items:center;border-radius:8px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card-hi);color:var(--fg-0)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6.5 3 2 8l4.5 5M9.5 3 14 8l-4.5 5"></path></svg>
+        </div>
+        <div onClick="{{ toggleRight }}" title="Close" style="width:28px;height:28px;display:grid;place-items:center;border-radius:8px;color:var(--fg-3);cursor:pointer;font-size:15px" style-hover="background:var(--card-hi);color:var(--fg-0)">×</div>
+      </div>
+
+      <sc-if value="{{ tabDiff }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;border-bottom:1px solid var(--line-1);padding:11px 12px">
+          <div style="display:flex;align-items:center;gap:9px;padding:0 4px">
+            <span style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3)">CHANGES</span>
+            <div style="flex:1"></div>
+            <span style="font-family:var(--code);font-size:11.5px;color:var(--ok)">{{ diffAdd }}</span>
+            <span style="font-family:var(--code);font-size:11.5px;color:var(--bad)">{{ diffDel }}</span>
+          </div>
+          <sc-if value="{{ filesPending }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding:0 4px">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--info);animation:pulse 1.5s infinite;flex:none"></div>
+              <span style="font-size:11.5px;color:var(--fg-3)">Files are listed when the run finishes</span>
+            </div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:1px;margin-top:8px">
+            <sc-for list="{{ files }}" as="f" hint-placeholder-count="4">
+              <div onClick="{{ f.click }}" style="position:relative;display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <sc-if value="{{ f.active }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:7px;background:var(--card-hi)"></div></sc-if>
+                <span style="width:16px;height:16px;flex:none;border-radius:4px;background:var(--card-hi);display:grid;place-items:center;font-family:var(--code);font-size:7.5px;font-weight:500;color:{{ f.tint }};position:relative">{{ f.ext }}</span>
+                <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-1);position:relative;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-align:left">{{ f.path }}</span>
+                <span style="font-family:var(--code);font-size:11px;color:var(--ok);position:relative">{{ f.addTxt }}</span>
+                <span style="font-family:var(--code);font-size:11px;color:var(--bad);position:relative">{{ f.delTxt }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:1;overflow:auto;min-height:0;background:var(--surface)">
+          <sc-for list="{{ hunks }}" as="h" hint-placeholder-count="6">
+            <div style="display:flex;font-family:var(--code);font-size:11.5px;line-height:1.9">
+              <sc-if value="{{ h.hdr }}" hint-placeholder-val="{{ false }}">
+                <div style="width:100%;padding:5px 12px;background:var(--card-hi);color:var(--fg-3);border-top:1px solid var(--line-1);border-bottom:1px solid var(--line-1);white-space:pre">{{ h.c }}</div>
+              </sc-if>
+              <sc-if value="{{ h.add }}" hint-placeholder-val="{{ true }}">
+                <div style="width:100%;display:flex;background:var(--addbg)">
+                  <span style="width:34px;flex:none;text-align:right;padding-right:8px;color:var(--fg-4)">{{ h.a }}</span>
+                  <span style="width:34px;flex:none;text-align:right;padding-right:10px;color:var(--fg-4)">{{ h.b }}</span>
+                  <span style="width:11px;flex:none;color:var(--ok)">+</span>
+                  <span style="color:var(--fg-0);white-space:pre">{{ h.c }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ h.del }}" hint-placeholder-val="{{ false }}">
+                <div style="width:100%;display:flex;background:var(--delbg)">
+                  <span style="width:34px;flex:none;text-align:right;padding-right:8px;color:var(--fg-4)">{{ h.a }}</span>
+                  <span style="width:34px;flex:none;text-align:right;padding-right:10px;color:var(--fg-4)">{{ h.b }}</span>
+                  <span style="width:11px;flex:none;color:var(--bad)">−</span>
+                  <span style="color:var(--fg-2);white-space:pre">{{ h.c }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ h.ctx }}" hint-placeholder-val="{{ false }}">
+                <div style="width:100%;display:flex">
+                  <span style="width:34px;flex:none;text-align:right;padding-right:8px;color:var(--fg-4)">{{ h.a }}</span>
+                  <span style="width:34px;flex:none;text-align:right;padding-right:10px;color:var(--fg-4)">{{ h.b }}</span>
+                  <span style="width:11px;flex:none"> </span>
+                  <span style="color:var(--fg-3);white-space:pre">{{ h.c }}</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noDiff }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:64px 24px;text-align:center">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-4);margin-bottom:12px">NO CHANGES YET</div>
+              <div style="font-size:12.5px;color:var(--fg-3);line-height:1.6">Edits land here as the agent writes them.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ diffRunning }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:64px 24px;text-align:center">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-4);margin-bottom:12px">RUN IN PROGRESS</div>
+              <div style="font-size:12.5px;color:var(--fg-3);line-height:1.6">The diff opens once the trace completes.</div>
+            </div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ hasDiff }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:none;border-top:1px solid var(--line-1);padding:10px 12px;display:flex;gap:8px;align-items:center">
+            <div style="height:31px;padding:0 14px;display:flex;align-items:center;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="background:var(--accent-hi)">Merge to main</div>
+            <div style="height:31px;padding:0 13px;display:flex;align-items:center;border-radius:8px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:var(--line-3);color:var(--fg-0)">Comment</div>
+            <div style="flex:1"></div>
+            <span style="font-size:11.5px;color:var(--fg-4)">{{ fileIdx }}</span>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ tabAgents }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow-y:auto;min-height:0;padding:12px">
+          <sc-for list="{{ agents }}" as="a" hint-placeholder-count="3">
+            <div style="border:1px solid var(--line-1);border-radius:12px;background:var(--card);padding:13px 14px;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:7px;height:7px;border-radius:50%;background:var(--info);flex:none;position:relative">
+                  <sc-if value="{{ a.finished }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--ok)"></div></sc-if>
+                </div>
+                <span style="font-family:var(--code);font-size:12.5px;color:var(--fg-0)">{{ a.name }}</span>
+                <div style="flex:1"></div>
+                <span style="font-size:11px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.07em">{{ a.status }}</span>
+              </div>
+              <div style="font-size:12.5px;color:var(--fg-2);line-height:1.55;margin-top:8px">{{ a.task }}</div>
+              <div style="height:4px;border-radius:2px;background:var(--card-hi);margin-top:12px;overflow:hidden">
+                <div style="width:{{ a.pctW }};height:100%;background:var(--info)"></div>
+              </div>
+              <div style="display:flex;gap:14px;margin-top:10px;font-size:11.5px;color:var(--fg-3)">
+                <span>{{ a.model }}</span><span>{{ a.tokens }}</span><span>{{ a.elapsed }}</span>
+                <div style="flex:1"></div>
+                <span style="font-family:var(--code);color:var(--fg-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.tool }}</span>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noAgents }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:60px 20px;text-align:center">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-4);margin-bottom:12px">NO SUBAGENTS</div>
+              <div style="font-size:12.5px;color:var(--fg-3);line-height:1.6">This session runs on the main thread. Ask for a parallel sweep to fan out.</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabTerm }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term)">
+          <div style="flex:1;overflow-y:auto;padding:12px 14px;font-family:var(--code);font-size:12px;line-height:1.85">
+            <sc-for list="{{ term }}" as="l" hint-placeholder-count="10">
+              <div style="display:flex;min-height:20px">
+                <sc-if value="{{ l.cmd }}" hint-placeholder-val="{{ true }}"><span style="color:#6e6e6e;flex:none;padding-right:7px">❯</span><span style="color:#f4f4f4;white-space:pre-wrap;word-break:break-word;min-width:0">{{ l.t }}</span></sc-if>
+                <sc-if value="{{ l.out }}" hint-placeholder-val="{{ false }}"><span style="color:#b4b4b4;white-space:pre-wrap;word-break:break-word;min-width:0">{{ l.t }}</span></sc-if>
+                <sc-if value="{{ l.dim }}" hint-placeholder-val="{{ false }}"><span style="color:#7a7a7a;white-space:pre-wrap;word-break:break-word;min-width:0">{{ l.t }}</span></sc-if>
+                <sc-if value="{{ l.pass }}" hint-placeholder-val="{{ false }}"><span style="color:#7fe0ad;white-space:pre-wrap;word-break:break-word;min-width:0">{{ l.t }}</span></sc-if>
+                <sc-if value="{{ l.err }}" hint-placeholder-val="{{ false }}"><span style="color:#f87171;white-space:pre-wrap;word-break:break-word;min-width:0">{{ l.t }}</span></sc-if>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:7px;margin-top:2px">
+              <span style="color:#6e6e6e">❯</span>
+              <span style="display:inline-block;width:7px;height:14px;background:var(--accent);animation:blink 1s steps(1) infinite"></span>
+            </div>
+          </div>
+          <div style="flex:none;border-top:1px solid rgba(255,255,255,.07);padding:8px 14px;display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--code);font-size:11px;color:#7a7a7a">{{ cur.branch }}</span>
+            <div style="flex:1"></div>
+            <span style="font-family:var(--code);font-size:11px;color:#7a7a7a">zsh · node 22.4</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabFlow }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:none;border-bottom:1px solid var(--line-1);padding:12px 14px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="font-size:12px;color:var(--violet);flex:none">◈</span>
+            <span style="font-size:14px;font-weight:600;color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ flow.label }}</span>
+            <span style="font-family:var(--code);font-size:11px;color:var(--fg-3);flex:none">{{ flow.name }}</span>
+            <div style="flex:1"></div>
+            <sc-if value="{{ flow.running }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:5px;height:5px;border-radius:50%;background:var(--info);animation:pulse 1.5s infinite"></div>
+                <span style="font-size:12px;font-weight:500;color:var(--info)">{{ flow.clock }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ flow.paused }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:500;color:var(--warn)">Paused · {{ flow.clock }}</span></sc-if>
+            <sc-if value="{{ flow.finished }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:500;color:var(--ok)">Completed · {{ flow.clock }}</span></sc-if>
+            <sc-if value="{{ flow.scheduled }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--fg-2)">Scheduled · {{ flow.nextRun }}</span></sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:8px">
+            <span style="font-size:11.5px;color:var(--fg-3)">{{ flow.trigger }}</span>
+            <div style="flex:1"></div>
+            <span style="font-size:11.5px;color:var(--fg-3)">{{ flow.phaseLabel }}</span>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:11px">
+            <div onClick="{{ flow.togglePause }}" style="height:27px;padding:0 11px;display:flex;align-items:center;border-radius:8px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12px;font-weight:500;cursor:pointer" style-hover="background:var(--card-hi)">{{ flow.pauseLabel }}</div>
+            <div onClick="{{ flow.restart }}" style="height:27px;padding:0 11px;display:flex;align-items:center;border-radius:8px;border:1px solid var(--line-2);color:var(--fg-1);font-size:12px;font-weight:500;cursor:pointer" style-hover="background:var(--card-hi)">Re-run</div>
+            <div style="flex:1"></div>
+            <div style="display:flex;align-items:baseline;gap:7px">
+              <span style="font-size:11.5px;color:var(--fg-3)">{{ flow.costLabel }}</span>
+              <span style="font-size:12.5px;font-weight:600;color:var(--fg-0)">{{ flow.cost }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ flow.phases }}" as="p" hint-placeholder-count="4">
+            <div style="flex:none;border:1px solid var(--line-1);border-radius:11px;background:var(--card);overflow:hidden">
+              <div onClick="{{ p.toggle }}" style="display:flex;align-items:center;gap:9px;padding:10px 11px;cursor:pointer" style-hover="background:var(--card-hi)">
+                <div style="width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex:none;background:{{ p.numBg }};color:{{ p.numColor }};font-size:11px;font-weight:600">{{ p.num }}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600;color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</div>
+                  <div style="font-size:11px;color:var(--fg-3);margin-top:3px">{{ p.modeLabel }}</div>
+                </div>
+                <span style="font-size:11.5px;font-weight:500;color:{{ p.statColor }};flex:none">{{ p.statLabel }}</span>
+                <span style="font-size:9px;color:var(--fg-3);width:10px;text-align:center;flex:none">{{ p.chev }}</span>
+              </div>
+              <sc-if value="{{ p.open }}" hint-placeholder-val="{{ true }}">
+                <div style="border-top:1px solid var(--line-1);padding:9px;display:grid;grid-template-columns:{{ flow.cols }};gap:7px">
+                  <sc-for list="{{ p.agents }}" as="a" hint-placeholder-count="2">
+                    <div style="border:1px solid var(--line-1);border-radius:9px;background:var(--card-hi);padding:9px 10px;opacity:{{ a.dim }};animation:rise .28s ease-out">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="width:5px;height:5px;border-radius:50%;flex:none;background:{{ a.color }}"></div>
+                        <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-0);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                        <span style="font-size:10px;font-weight:500;color:{{ a.modelColor }};border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;flex:none">{{ a.model }}</span>
+                      </div>
+                      <div style="font-size:11.5px;color:var(--fg-2);margin-top:6px;line-height:1.45;text-wrap:pretty">{{ a.scope }}</div>
+                      <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap">
+                        <sc-for list="{{ a.tools }}" as="t" hint-placeholder-count="2">
+                          <span style="font-family:var(--code);font-size:10px;color:var(--fg-3);border-radius:5px;background:var(--code-bg);padding:2px 6px">{{ t.t }}</span>
+                        </sc-for>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-1)">
+                        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:10px;color:var(--fg-4)">tok</span><span style="font-size:11px;color:var(--fg-1)">{{ a.tokens }}</span></div>
+                        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:10px;color:var(--fg-4)">cost</span><span style="font-size:11px;color:var(--fg-1)">{{ a.cost }}</span></div>
+                        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:10px;color:var(--fg-4)">time</span><span style="font-size:11px;color:var(--fg-1)">{{ a.elapsed }}</span></div>
+                        <div style="flex:1"></div>
+                        <span style="font-size:10.5px;font-weight:500;color:{{ a.color }}">{{ a.stat }}</span>
+                      </div>
+                      <sc-if value="{{ a.spawned }}" hint-placeholder-val="{{ false }}">
+                        <div style="font-size:10.5px;color:var(--violet);margin-top:7px;line-height:1.45">↳ {{ a.spawnNote }}</div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+
+          <div style="flex:none;margin-top:6px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-3);margin-bottom:9px">MODEL MIX</div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ flow.models }}" as="m" hint-placeholder-count="3">
+                <div>
+                  <div style="display:flex;align-items:baseline;gap:8px">
+                    <span style="font-family:var(--code);font-size:11px;color:{{ m.color }}">{{ m.name }}</span>
+                    <div style="flex:1"></div>
+                    <span style="font-size:11px;color:var(--fg-3)">{{ m.agents }}</span>
+                    <span style="font-size:11px;font-weight:500;color:var(--fg-0);width:46px;text-align:right">{{ m.tokens }}</span>
+                  </div>
+                  <div style="height:3px;border-radius:2px;background:var(--card-hi);overflow:hidden;margin-top:5px">
+                    <div style="width:{{ m.w }};height:100%;background:{{ m.color }}"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ rightClosed }}" hint-placeholder-val="{{ false }}">
+  <div style="width:48px;flex:none;background:var(--rail);border-left:1px solid var(--line-1);display:flex;flex-direction:column;align-items:center;padding-top:12px;gap:6px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <div onClick="{{ t.openClick }}" title="{{ t.label }}" style="width:32px;height:32px;display:grid;place-items:center;border-radius:8px;cursor:pointer;color:var(--fg-3);font-family:var(--code);font-size:11px" style-hover="background:var(--card-hi);color:var(--fg-0)">{{ t.short }}</div>
+    </sc-for>
+  </div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ palette }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closePalette }}" style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;justify-content:center;padding-top:120px;z-index:50">
+    <div style="width:640px;height:fit-content;background:var(--rail);border:1px solid var(--line-3);border-radius:14px;box-shadow:0 32px 70px -14px rgba(0,0,0,.8);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:11px;padding:15px 17px;border-bottom:1px solid var(--line-1)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span style="font-size:14.5px;color:var(--fg-3)">Jump to a session, file, or command…</span>
+        <div style="flex:1"></div>
+        <span style="display:inline-block;width:7px;height:16px;background:var(--accent);animation:blink 1s steps(1) infinite"></span>
+      </div>
+      <div style="padding:8px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.09em;color:var(--fg-4);padding:8px 10px 6px">SESSIONS</div>
+        <sc-for list="{{ paletteRows }}" as="r" hint-placeholder-count="5">
+          <div onClick="{{ r.click }}" style="display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:8px;cursor:pointer" style-hover="background:var(--card-hi)">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--fg-4);flex:none;position:relative">
+              <sc-if value="{{ r.running }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--info)"></div></sc-if>
+              <sc-if value="{{ r.waiting }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;border-radius:50%;background:var(--warn)"></div></sc-if>
+            </div>
+            <span style="font-size:13.5px;color:var(--fg-0)">{{ r.title }}</span>
+            <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-3)">{{ r.project }}</span>
+            <div style="flex:1"></div>
+            <span style="font-family:var(--code);font-size:11.5px;color:var(--fg-4)">{{ r.branch }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border-top:1px solid var(--line-1);padding:10px 15px;display:flex;gap:18px;font-size:11.5px;color:var(--fg-4)">
+        <span>↑↓ navigate</span><span>⏎ open</span><span>⌘⏎ new worktree</span><span>esc close</span>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeSettings }}" style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:60">
+    <div onClick="{{ stopClick }}" style="width:760px;max-height:78%;background:var(--rail);border:1px solid var(--line-3);border-radius:14px;box-shadow:0 32px 70px -14px rgba(0,0,0,.8);display:flex;flex-direction:column;overflow:hidden">
+      <div style="flex:none;display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-1)">
+        <span style="font-size:15px;font-weight:600;color:var(--fg-0);letter-spacing:-.2px">Settings</span>
+        <div style="flex:1"></div>
+        <div onClick="{{ closeSettings }}" style="width:26px;height:26px;display:grid;place-items:center;border-radius:7px;cursor:pointer;color:var(--fg-3);font-size:15px" style-hover="background:var(--card-hi)">✕</div>
+      </div>
+
+      <div style="flex:1;min-height:0;overflow-y:auto;display:flex">
+        <div style="width:184px;flex:none;border-right:1px solid var(--line-1);padding:14px 10px;display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:center;height:32px;padding:0 11px;border-radius:8px;background:var(--card-hi);font-size:13px;font-weight:500;color:var(--fg-0)">Model</div>
+          <div style="display:flex;align-items:center;height:32px;padding:0 11px;border-radius:8px;font-size:13px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card)">Permissions</div>
+          <div style="display:flex;align-items:center;height:32px;padding:0 11px;border-radius:8px;font-size:13px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card)">Editor</div>
+          <div style="display:flex;align-items:center;height:32px;padding:0 11px;border-radius:8px;font-size:13px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card)">Appearance</div>
+          <div style="display:flex;align-items:center;height:32px;padding:0 11px;border-radius:8px;font-size:13px;color:var(--fg-3);cursor:pointer" style-hover="background:var(--card)">Account</div>
+        </div>
+
+        <div style="flex:1;min-width:0;padding:22px 24px 26px;display:flex;flex-direction:column;gap:26px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13.5px;font-weight:600;color:var(--fg-0)">Response style</span>
+              <span style="font-size:12px;color:var(--fg-3);line-height:1.5">How much ant-pi writes around the work it does. Does not affect how much it thinks.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ verbosityOptions }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.click }}" style="display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:9px;cursor:pointer;border:1px solid {{ o.border }};background:{{ o.bg }}" style-hover="background:var(--card-hi)">
+                  <span style="width:12px;flex:none;font-size:11px;color:var(--accent);padding-top:2px">{{ o.check }}</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                    <div style="font-size:11.5px;color:var(--fg-3);margin-top:2px;line-height:1.45">{{ o.sub }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13.5px;font-weight:600;color:var(--fg-0)">Advisor model</span>
+              <span style="font-size:12px;color:var(--fg-3);line-height:1.5">A stronger model ant-pi consults at decision points — before committing to an approach, when an error keeps returning, and before calling a task done. It sees the whole session but never edits files.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ advisorOptions }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.click }}" style="display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:9px;cursor:pointer;border:1px solid {{ o.border }};background:{{ o.bg }}" style-hover="background:var(--card-hi)">
+                  <span style="width:12px;flex:none;font-size:11px;color:var(--accent);padding-top:2px">{{ o.check }}</span>
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--fg-0)">{{ o.name }}</div>
+                    <div style="font-size:11.5px;color:var(--fg-3);margin-top:2px;line-height:1.45">{{ o.sub }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:9px 11px;border-top:1px solid var(--line-1)">
+              <span style="font-size:11.5px;color:var(--fg-3)">This session</span>
+              <div style="flex:1"></div>
+              <span style="font-size:11.5px;color:var(--fg-1)">{{ advisorUsage }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:none;border-top:1px solid var(--line-1);padding:11px 20px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:var(--fg-4)">
+        <span>Applies to new turns in every session</span>
+        <div style="flex:1"></div>
+        <span>esc close</span>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1680,&quot;height&quot;:1080},&quot;appearance&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;night&quot;,&quot;day&quot;],&quot;default&quot;:&quot;night&quot;,&quot;tsType&quot;:&quot;'night'|'day'&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  state = {
+    theme: this.props.appearance === 'day' ? 'day' : 'night',
+    sid: 's1',
+    open: { 'checkout-web': true, 'payments-api': true, 'design-tokens': false },
+    tab: 'diff', right: true, wide: false,
+    mode: 'build', effort: 'high', verbosity: 'normal', access: 'auto', advisor: 'opus-4.2',
+    menu: null, composer: '', palette: false, settings: false, effortHover: false, fileIdx: 0, rewind: null,
+    merge: true, openTools: {},
+    sessions: this.build(),
+    wid: 'ship-it', t: 40, paused: false, uphase: { 1: true },
+  };
+
+  wfs() {
+    if (this._wfs) return this._wfs;
+    const A = (name, model, scope, start, dur, tok, tools, spawnNote) => ({ name, model, scope, start, dur, tok, tools, spawnNote });
+    this._wfs = {
+      'ship-it': {
+        name: 'ship-it', label: 'Review and ship this branch', trigger: 'on push · fix/cart-rounding', file: '.ant-pi/workflows/ship-it.md',
+        edited: 'edited 3d ago by Lena C.', live: true,
+        about: 'Reviews a branch with a fan-out of specialist agents, merges their findings into one commit, then verifies and opens the PR. Phases run in order; agents inside a phase run together and may spawn children of their own.',
+        policies: [
+          { label: 'Trigger', value: 'push to fix/*' }, { label: 'Max parallel agents', value: '6' },
+          { label: 'Budget', value: '$4.00 / run' }, { label: 'On failure', value: 'stop and report' },
+        ],
+        phases: [
+          { name: 'Map the blast radius', mode: 'sequential', gate: '', agents: [
+            A('scout', 'haiku-4.5', 'Index the changed files and every module that depends on them', 0, 14, 8100, ['Search', 'Read', 'Graph']),
+          ], spawnRule: '' },
+          { name: 'Parallel review', mode: 'parallel', gate: 'all must pass', agents: [
+            A('review-math', 'opus-4.2', 'Verify the minor-unit arithmetic and every rounding boundary', 15, 26, 14200, ['Read', 'Bash']),
+            A('review-callsites', 'sonnet-4.6', 'Find float leakage at each call site of the money helpers', 15, 34, 9600, ['Search', 'Read']),
+            A('review-api', 'sonnet-4.6', 'Check the serialisation boundary and the v3 wire format', 15, 30, 7200, ['Read', 'Fetch']),
+            A('review-tests', 'haiku-4.5', 'Cover the gap review-math flagged in splitEvenly()', 34, 18, 4100, ['Read', 'Bash'], 'spawned by review-math — untested remainder path'),
+            A('review-mobile', 'haiku-4.5', 'Check the v3.2 mobile client against the proposed payload', 44, 16, 3300, ['Search', 'Read'], 'spawned by review-api — breaking-change risk'),
+          ], spawnRule: 'A reviewer may spawn one child agent per finding it cannot close on its own — capped at 3 per phase.' },
+          { name: 'Fix and verify', mode: 'sequential', gate: 'stop on failure', agents: [
+            A('fixer', 'sonnet-4.6', 'Apply the merged findings as a single reviewable commit', 62, 30, 18400, ['Edit', 'Bash', 'Read']),
+            A('verifier', 'haiku-4.5', 'Run the cart and checkout suites, then typecheck the workspace', 92, 20, 6200, ['Bash']),
+          ], spawnRule: '' },
+          { name: 'Ship', mode: 'sequential', gate: '', agents: [
+            A('changelog', 'haiku-4.5', 'Write the changelog entry from the merged findings', 113, 12, 2400, ['Read', 'Edit']),
+            A('pr-author', 'sonnet-4.6', 'Open the PR against main with findings as a checklist', 125, 14, 5100, ['Bash', 'Fetch']),
+          ], spawnRule: '' },
+        ],
+        artifacts: [
+          { name: 'review-findings.md', meta: '3 open' },
+          { name: 'coverage/cart.html', meta: '94.2%' },
+          { name: 'PR #4127 (draft)', meta: 'main ← fix/cart-rounding' },
+        ],
+      },
+      'nightly-refactor': {
+        name: 'nightly-refactor', label: 'Nightly dead-code sweep', trigger: 'schedule · 02:00 daily', file: '.ant-pi/workflows/nightly-refactor.md',
+        edited: 'edited 3w ago by Ravi P.', live: false, t: 0, status: 'scheduled', next: 'next run 02:00',
+        about: 'Sweeps the workspace for dead code and duplicated helpers overnight, then leaves a single PR per package. Cheap models do the sweep; a stronger model only sees the shortlist.',
+        policies: [
+          { label: 'Trigger', value: 'cron 0 2 * * *' }, { label: 'Max parallel agents', value: '8' },
+          { label: 'Budget', value: '$2.50 / run' }, { label: 'On failure', value: 'skip package' },
+        ],
+        phases: [
+          { name: 'Sweep packages', mode: 'parallel', gate: 'best effort', agents: [
+            A('sweep-web', 'haiku-4.5', 'Scan checkout-web for dead exports and duplicate helpers', 0, 20, 5200, ['Search', 'Read']),
+            A('sweep-api', 'haiku-4.5', 'Scan payments-api for the same', 0, 20, 4800, ['Search', 'Read']),
+          ], spawnRule: 'One extra sweeper per package above 400 files.' },
+          { name: 'Judge the shortlist', mode: 'sequential', gate: '', agents: [
+            A('judge', 'opus-4.2', 'Decide which removals are safe and which need a human', 20, 24, 11000, ['Read']),
+          ], spawnRule: '' },
+          { name: 'Open PRs', mode: 'parallel', gate: '', agents: [
+            A('pr-web', 'sonnet-4.6', 'Open the checkout-web cleanup PR', 44, 12, 3100, ['Edit', 'Bash']),
+            A('pr-api', 'sonnet-4.6', 'Open the payments-api cleanup PR', 44, 12, 2900, ['Edit', 'Bash']),
+          ], spawnRule: '' },
+        ],
+        artifacts: [{ name: 'last-run.log', meta: 'yesterday' }],
+      },
+      'docs-sync': {
+        name: 'docs-sync', label: 'Sync API docs after a merge', trigger: 'on merge · main', file: '.ant-pi/workflows/docs-sync.md',
+        edited: 'edited 6d ago by Lena C.', live: false, t: 999,
+        about: 'Keeps the API reference in step with merged changes. One agent reads the diff, one rewrites the affected pages, one checks every code sample still runs.',
+        policies: [
+          { label: 'Trigger', value: 'merge to main' }, { label: 'Max parallel agents', value: '3' },
+          { label: 'Budget', value: '$1.00 / run' }, { label: 'On failure', value: 'comment on PR' },
+        ],
+        phases: [
+          { name: 'Read the merge', mode: 'sequential', gate: '', agents: [
+            A('differ', 'haiku-4.5', 'List the public surface that changed in this merge', 0, 10, 3200, ['Bash', 'Read']),
+          ], spawnRule: '' },
+          { name: 'Rewrite and check', mode: 'parallel', gate: 'all must pass', agents: [
+            A('writer', 'sonnet-4.6', 'Rewrite the affected reference pages', 10, 22, 9400, ['Read', 'Edit']),
+            A('sample-runner', 'haiku-4.5', 'Execute every code sample on the touched pages', 10, 18, 4100, ['Bash']),
+          ], spawnRule: '' },
+        ],
+        artifacts: [{ name: 'docs/api/cart.mdx', meta: '+62 −18' }, { name: 'samples.log', meta: '14 passed' }],
+      },
+    };
+    return this._wfs;
+  }
+
+  wf() { return this.wfs()[this.state.wid]; }
+  wfT() { const w = this.wf(); return w.live ? this.state.t : w.t; }
+  wfEnd(w) { return Math.max.apply(null, w.phases.map(p => Math.max.apply(null, p.agents.map(a => a.start + a.dur)))); }
+  mmss(s) { const m = Math.floor(s / 60); return m + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
+  modelTint(m) { return m.indexOf('opus') === 0 ? 'var(--violet)' : m.indexOf('haiku') === 0 ? 'var(--fg-2)' : 'var(--accent)'; }
+  kTok(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(Math.round(n)); }
+
+  ultraTick = () => {
+    if (this.state.paused) return;
+    const all = this.wfs();
+    const w = all[Object.keys(all).find(k => all[k].live)];
+    if (!w || this.state.t >= this.wfEnd(w) + 4) return;
+    this.setState(s => ({ t: s.t + 1 }));
+  };
+
+  cardStats(id) {
+    const w = this.wfs()[id], T = w.live ? this.state.t : w.t, end = this.wfEnd(w);
+    const rates = { 'opus-4.2': 0.00006, 'sonnet-4.6': 0.000015, 'haiku-4.5': 0.000004 };
+    const prog = a => Math.max(0, Math.min(1, (T - a.start) / a.dur));
+    const agents = [].concat.apply([], w.phases.map(p => p.agents));
+    const cost = agents.reduce((n, a) => n + a.tok * prog(a) * (rates[a.model] || 0.00002), 0);
+    const live = agents.filter(a => T > a.start && prog(a) < 1).length;
+    const donePh = w.phases.filter(p => p.agents.every(a => prog(a) >= 1)).length;
+    const running = w.live && T < end, scheduled = w.status === 'scheduled';
+    const paused = running && this.state.paused;
+    return {
+      name: w.name, label: w.label,
+      status: scheduled ? 'Scheduled' : paused ? 'Paused' : running ? 'Running' : 'Completed',
+      statusColor: scheduled ? 'var(--fg-3)' : paused ? 'var(--warn)' : running ? 'var(--info)' : 'var(--ok)',
+      running, finished: !running,
+      phaseLabel: scheduled ? w.next : running
+        ? 'Phase ' + Math.min(donePh + 1, w.phases.length) + ' of ' + w.phases.length + ' · ' + w.phases[Math.min(donePh, w.phases.length - 1)].name
+        : w.phases.length + ' phases complete',
+      agentsLabel: live === 1 ? '1 agent working' : live + ' agents working',
+      clock: this.mmss(Math.min(T, end)),
+      cost: '$' + cost.toFixed(2),
+      pips: w.phases.map(p => {
+        const st2 = p.agents.every(a => prog(a) >= 1) ? 'done' : p.agents.some(a => T > a.start) ? 'run' : 'queued';
+        return { name: p.name, color: st2 === 'done' ? 'var(--ok)' : st2 === 'run' ? 'var(--info)' : 'var(--line-2)' };
+      }),
+    };
+  }
+
+  rewindFiles(i) {
+    const s = this.cur();
+    const after = s.steps.slice(i + 1).filter(x => x.k === 'edit').map(x => x.file);
+    return s.files.filter(f => after.indexOf(f.path) >= 0).map(f => f.path);
+  }
+
+  doRewind(i, withCode) {
+    const s = this.cur();
+    this.halt(s);
+    const restored = this.rewindFiles(i);
+    s.steps = s.steps.slice(0, i + 1);
+    s.pending = [];
+    s.status = 'done';
+    s.activity = 'Rewound';
+    if (withCode) s.files = s.files.filter(f => restored.indexOf(f.path) < 0);
+    s.steps.push({ k: 'rewind', text: withCode
+      ? (restored.length ? 'Conversation and code · ' + restored.length + (restored.length === 1 ? ' file' : ' files') + ' restored' : 'Conversation and code · nothing to restore')
+      : 'Conversation only · working tree left untouched' });
+    this.setState({ rewind: null, fileIdx: 0 });
+  }
+
+  openFlow = id => this.setState({ wid: id, right: true, tab: 'flow', wide: true, palette: false, menu: null });
+
+  pd(a, b, lines) {
+    let A = a, B = b;
+    return lines.map(l => {
+      const t = l[0], c = l.slice(1);
+      if (t === '@') return { hdr: true, c: l, a: '', b: '' };
+      if (t === '+') return { add: true, a: '', b: String(B++), c };
+      if (t === '-') return { del: true, a: String(A++), b: '', c };
+      return { ctx: true, a: String(A++), b: String(B++), c };
+    });
+  }
+  o(t, kind) { return { t, [kind]: true }; }
+
+  build() {
+    const pd = this.pd.bind(this);
+    return {
+      s1: {
+        id: 's1', project: 'checkout-web', title: 'Fix cart total rounding drift', branch: 'fix/cart-rounding',
+        worktree: '~/code/checkout-web-cart', status: 'running', elapsed: '4m 12s', model: 'sonnet-4.6', ago: 'now',
+        activity: 'Editing useCartTotals.test.ts', at: '2:40:02 PM',
+        steps: [
+          { k: 'user', text: 'Cart totals drift by a cent whenever a line item has a percentage discount. Find where the rounding happens, fix it properly, and add a regression test.' },
+          { k: 'think', text: 'Thought for 6s', meta: 'grep "toFixed" · 3 files', body: [
+            'Three call sites round money: applyDiscount, the subtotal reducer in useCartTotals, and the display formatter. Only one of them should.',
+            'If the discount is applied to a float and then rounded per line, a 33% split across three items floors three times and loses a cent. Rounding once at the end would hide it for that case but not for stacked discounts.',
+            'The robust fix is integer minor units end to end: store cents, apply discounts on cents, and only divide when formatting. That means touching money.ts, the totals hook, and the fixtures that assert dollars.',
+          ] },
+          { k: 'read', file: 'src/features/cart/useCartTotals.ts', meta: '142 lines' },
+          { k: 'read', file: 'src/lib/money.ts', meta: '88 lines' },
+          { k: 'text', text: 'Each line is rounded to cents before the subtotal is summed, so a 33% discount across three items loses a cent to floor rounding in `applyDiscount`. Money should stay in integer minor units until the final `format()` call.' },
+          { k: 'edit', file: 'src/lib/money.ts', add: 18, del: 6, open: true, diff: pd(0, 0, [
+            '-export const applyDiscount = (n: number, pct: number) =>',
+            '-  Math.round(n * (1 - pct / 100) * 100) / 100;',
+            '+export const applyDiscount = (minor: number, pct: number): number =>',
+            '+  minor - Math.round((minor * pct) / 100);',
+            ' ',
+            '+export const sumMinor = (parts: number[]) =>',
+            '+  parts.reduce((a, b) => a + b, 0);',
+          ]) },
+          { k: 'edit', file: 'src/features/cart/useCartTotals.ts', add: 9, del: 11, open: false, diff: pd(0, 0, [
+            '-  const subtotal = items.reduce((a, i) => a + round2(i.price * i.qty), 0);',
+            '+  const subtotal = sumMinor(items.map(i => i.priceMinor * i.qty));',
+          ]) },
+          { k: 'run', cmd: 'pnpm vitest run src/features/cart', dur: '2.1s', fail: true, out: [
+            { t: '✓ useCartTotals > sums line items', pass: true },
+            { t: '× useCartTotals > applies flat discount', err: true },
+            { t: '  expected 1899 to be 18.99', dim: true },
+            { t: 'Tests  9 passed | 2 failed (11)', dim: true },
+          ] },
+          { k: 'advise', text: 'Consulted before rewriting the fixtures', meta: 'opus-4.2 · 612 tokens', cost: '612 tokens · $0.04',
+            trigger: 'Called after the same assertion failed twice — a recurring error is a decision point.', open: true, body: [
+            'Do not migrate the fixtures one assertion at a time. The two failures are the same class of bug: the test data still speaks dollars while the code now speaks cents, so every future test will inherit the ambiguity.',
+            'Add a single fixture helper — money(18.99) → 1899 — and route every expectation through it. That makes the unit explicit at the call site and turns the remaining migration into a mechanical change.',
+            'Before you call this done, add the case that actually motivated the report: a percentage discount split across three lines, asserting the sum of the lines equals the cart total exactly.',
+          ] },
+          { k: 'wf', wid: 'ship-it' },
+        ],
+        pending: [
+          { k: 'text', text: 'Two of the eleven tests still assert float dollars. Migrating their fixtures to minor units, then adding the regression case for percentage discounts.' },
+          { k: 'edit', file: 'src/features/cart/__tests__/useCartTotals.test.ts', add: 34, del: 8, open: true, diff: pd(0, 0, [
+            '-expect(total).toBe(18.99);',
+            '+expect(total).toBe(1899);',
+            ' ',
+            "+it('keeps cents exact across percentage discounts', () => {",
+            '+  const total = subtotal([1299, 1299, 1299], { pct: 33 });',
+            '+  expect(total).toBe(2611);',
+            '+});',
+          ]) },
+          { k: 'run', cmd: 'pnpm vitest run src/features/cart', dur: '1.4s', ok: true, out: [
+            { t: '✓ useCartTotals (12 tests) 412ms', pass: true },
+            { t: '✓ money (7 tests) 88ms', pass: true },
+            { t: 'Tests  19 passed (19)', dim: true },
+          ] },
+          { k: 'done', add: 61, del: 25, dur: '4m 41s', text: 'Money is now integer minor units end to end — `format()` is the only place that divides by 100. Three files changed on `fix/cart-rounding`, all 19 tests green.' },
+        ],
+        files: [
+          { path: 'src/lib/money.ts', add: 18, del: 6 },
+          { path: 'src/features/cart/useCartTotals.ts', add: 9, del: 11 },
+          { path: 'src/features/cart/__tests__/useCartTotals.test.ts', add: 34, del: 8 },
+        ],
+        hunks: [pd(11, 11, [
+          '@@ -11,9 +11,14 @@ src/lib/money.ts',
+          ' export type Minor = number;',
+          ' ',
+          '-export const round2 = (n: number) => Math.round(n * 100) / 100;',
+          '-export const applyDiscount = (n: number, pct: number) =>',
+          '-  round2(n * (1 - pct / 100));',
+          '+export const applyDiscount = (minor: Minor, pct: number): Minor =>',
+          '+  minor - Math.round((minor * pct) / 100);',
+          '+',
+          '+export const sumMinor = (parts: Minor[]): Minor =>',
+          '+  parts.reduce((a, b) => a + b, 0);',
+          ' ',
+          ' export const format = (minor: Minor, currency: string) =>',
+          '   new Intl.NumberFormat(locale, { style: "currency", currency })',
+          '     .format(minor / 100);',
+        ]), pd(38, 38, [
+          '@@ -38,11 +38,9 @@ src/features/cart/useCartTotals.ts',
+          ' export function useCartTotals(items: LineItem[], promo?: Promo) {',
+          '-  const subtotal = items.reduce(',
+          '-    (a, i) => a + round2(i.price * i.qty),',
+          '-    0,',
+          '-  );',
+          '-  const discount = round2((subtotal * (promo?.pct ?? 0)) / 100);',
+          '+  const subtotal = sumMinor(items.map(i => i.priceMinor * i.qty));',
+          '+  const discount = applyDiscount(subtotal, promo?.pct ?? 0);',
+          ' ',
+          '   return { subtotal, discount, total: subtotal - discount };',
+          ' }',
+        ]), pd(6, 6, [
+          '@@ -6,10 +6,18 @@ src/features/cart/__tests__/useCartTotals.test.ts',
+          " it('applies a flat discount', () => {",
+          '-  const { total } = renderTotals([{ price: 12.99, qty: 1 }]);',
+          '-  expect(total).toBe(18.99);',
+          '+  const { total } = renderTotals([{ priceMinor: 1299, qty: 1 }]);',
+          '+  expect(total).toBe(1899);',
+          ' });',
+          '+',
+          "+it('keeps cents exact across percentage discounts', () => {",
+          '+  const { total } = renderTotals(',
+          '+    [{ priceMinor: 1299, qty: 3 }],',
+          '+    { pct: 33 },',
+          '+  );',
+          '+  expect(total).toBe(2611);',
+          '+});',
+        ])],
+        agents: [],
+        term: [
+          this.o('pnpm vitest run src/features/cart', 'cmd'),
+          this.o('RUN  v2.1.4  /Users/lc/code/checkout-web', 'dim'),
+          this.o('✓ src/lib/__tests__/money.test.ts (7)', 'pass'),
+          this.o('× src/features/cart/__tests__/useCartTotals.test.ts (11)', 'err'),
+          this.o('  → applies flat discount', 'err'),
+          this.o('    AssertionError: expected 1899 to be 18.99', 'dim'),
+          this.o('Tests  9 passed | 2 failed (11)', 'dim'),
+          this.o('Duration  2.11s', 'dim'),
+        ],
+      },
+      s2: {
+        id: 's2', project: 'checkout-web', title: 'Checkout stepper a11y pass', branch: 'feat/stepper-a11y',
+        worktree: '~/code/checkout-web-a11y', status: 'done', elapsed: '11m 04s', model: 'sonnet-4.6', ago: '18m', at: '1:52:19 PM',
+        steps: [
+          { k: 'user', text: 'Screen reader users can’t tell which checkout step they’re on, and tab order jumps backwards after validation. Fix both and cover it with tests.' },
+          { k: 'think', text: 'Thought for 11s', meta: 'audited 6 components', body: [
+            'The stepper is a div soup — no list semantics, no aria-current, so a screen reader announces four unlabelled buttons with no sense of position.',
+            'Tab order jumping backwards is a separate bug: validation re-renders the form and focus falls back to the root. Focus has to be pinned to the first invalid field instead.',
+            'Both are fixable without changing the visual design, and both are testable with @testing-library queries by role.',
+          ] },
+          { k: 'read', file: 'src/features/checkout/CheckoutStepper.tsx', meta: '218 lines' },
+          { k: 'text', text: 'The stepper renders nested divs with no list semantics and no `aria-current`, and focus is restored to the form root on every validation pass. I moved focus management into `useStepFocus` and gave the stepper real list semantics.' },
+          { k: 'edit', file: 'src/features/checkout/CheckoutStepper.tsx', add: 86, del: 24, open: false, diff: this.pd(0, 0, ['-<div className="stepper">', '+<ol className="stepper" aria-labelledby={labelId}>']) },
+          { k: 'run', cmd: 'pnpm vitest run --coverage src/features/checkout', dur: '3.8s', ok: true, out: [
+            { t: '✓ stepper.a11y.test.tsx (9 tests) 640ms', pass: true },
+            { t: '✓ checkout.test.tsx (14 tests) 1.2s', pass: true },
+            { t: 'Coverage  94.2% statements', dim: true },
+          ] },
+          { k: 'done', add: 260, del: 87, dur: '11m 04s', text: 'Six files changed. `axe` reports zero violations on the checkout route, and focus stays on the invalid field after a failed submit.' },
+        ],
+        pending: [],
+        files: [
+          { path: 'src/features/checkout/CheckoutStepper.tsx', add: 86, del: 24 },
+          { path: 'src/features/checkout/StepIndicator.tsx', add: 41, del: 12 },
+          { path: 'src/features/checkout/useStepFocus.ts', add: 38, del: 0 },
+          { path: 'src/components/VisuallyHidden.tsx', add: 12, del: 0 },
+          { path: 'src/features/checkout/__tests__/stepper.a11y.test.tsx', add: 64, del: 0 },
+          { path: 'src/styles/checkout.css', add: 19, del: 51 },
+        ],
+        hunks: [this.pd(14, 14, [
+          '@@ -14,21 +14,28 @@ export function CheckoutStepper({ steps, active }: Props) {',
+          '   const stepRefs = useRef<(HTMLLIElement | null)[]>([]);',
+          '-  const [focused, setFocused] = useState(0);',
+          '+  const { focused, onKeyDown } = useStepFocus(steps.length, active);',
+          '+  const labelId = useId();',
+          ' ',
+          '   return (',
+          '-    <div className="stepper">',
+          '-      {steps.map((s, i) => (',
+          '-        <div key={s.id} className={cx("step", i === active && "is-active")}>',
+          '-          <span className="dot" />',
+          '-          <span>{s.label}</span>',
+          '-        </div>',
+          '+    <ol className="stepper" aria-labelledby={labelId} onKeyDown={onKeyDown}>',
+          '+      <VisuallyHidden id={labelId}>Checkout progress</VisuallyHidden>',
+          '+      {steps.map((s, i) => (',
+          '+        <li',
+          '+          key={s.id}',
+          '+          tabIndex={i === focused ? 0 : -1}',
+          '+          aria-current={i === active ? "step" : undefined}',
+          '+        >',
+          '+          <StepIndicator index={i} state={stateFor(i, active)} />',
+          '+          <span className="step__label">{s.label}</span>',
+          '+        </li>',
+          '       ))}',
+          '-    </div>',
+          '+    </ol>',
+          '   );',
+          ' }',
+        ]), this.pd(3, 3, [
+          '@@ -3,12 +3,17 @@ src/features/checkout/StepIndicator.tsx',
+          '-export function StepIndicator({ index }: { index: number }) {',
+          '-  return <span className="dot" />;',
+          '+type State = "done" | "current" | "upcoming";',
+          '+',
+          '+export function StepIndicator({ index, state }: Props) {',
+          '+  return (',
+          '+    <span className={cx("dot", `is-${state}`)} aria-hidden="true">',
+          '+      {state === "done" ? <CheckGlyph /> : index + 1}',
+          '+    </span>',
+          '+  );',
+          ' }',
+        ]), this.pd(1, 1, [
+          '@@ -0,0 +1,38 @@ src/features/checkout/useStepFocus.ts',
+          '+export function useStepFocus(count: number, active: number) {',
+          '+  const [focused, setFocused] = useState(active);',
+          '+',
+          '+  useEffect(() => setFocused(active), [active]);',
+          '+',
+          '+  const onKeyDown = (e: React.KeyboardEvent) => {',
+          '+    if (e.key === "ArrowRight") setFocused(i => Math.min(i + 1, count - 1));',
+          '+    if (e.key === "ArrowLeft") setFocused(i => Math.max(i - 1, 0));',
+          '+  };',
+          '+',
+          '+  return { focused, onKeyDown };',
+          '+}',
+        ]), this.pd(1, 1, [
+          '@@ -0,0 +1,12 @@ src/components/VisuallyHidden.tsx',
+          '+export function VisuallyHidden({ id, children }: Props) {',
+          '+  return (',
+          '+    <span id={id} className="sr-only">',
+          '+      {children}',
+          '+    </span>',
+          '+  );',
+          '+}',
+        ]), this.pd(1, 1, [
+          '@@ -0,0 +1,64 @@ src/features/checkout/__tests__/stepper.a11y.test.tsx',
+          "+it('exposes the active step to assistive tech', () => {",
+          '+  render(<CheckoutStepper steps={steps} active={1} />);',
+          "+  const current = screen.getByRole('listitem', { current: 'step' });",
+          "+  expect(current).toHaveTextContent('Delivery');",
+          '+});',
+          '+',
+          "+it('keeps focus on the invalid field after a failed submit', async () => {",
+          '+  await user.click(screen.getByRole("button", { name: /continue/i }));',
+          '+  expect(screen.getByLabelText(/postcode/i)).toHaveFocus();',
+          '+});',
+        ]), this.pd(22, 22, [
+          '@@ -22,18 +22,9 @@ src/styles/checkout.css',
+          ' .stepper {',
+          '-  display: block;',
+          '-  padding-left: 0;',
+          '-}',
+          '-.stepper .step {',
+          '-  float: left;',
+          '-  margin-right: 24px;',
+          '+  display: flex;',
+          '+  gap: var(--sp-5);',
+          '+  list-style: none;',
+          ' }',
+          '+.stepper li:focus-visible {',
+          '+  outline: 2px solid var(--primary);',
+          '+}',
+        ])],
+        agents: [],
+        term: [
+          this.o('pnpm vitest run --coverage src/features/checkout', 'cmd'),
+          this.o('✓ src/features/checkout/__tests__/stepper.a11y.test.tsx (9)', 'pass'),
+          this.o('✓ src/features/checkout/__tests__/checkout.test.tsx (14)', 'pass'),
+          this.o('Tests  23 passed (23)', 'dim'),
+          this.o('', 'dim'),
+          this.o('pnpm exec axe http://localhost:5173/checkout', 'cmd'),
+          this.o('0 violations · 41 passes', 'pass'),
+        ],
+      },
+      s3: {
+        id: 's3', project: 'checkout-web', title: 'Migrate API client to fetch', branch: 'refactor/api-client',
+        worktree: '~/code/checkout-web-refactor', status: 'waiting', elapsed: '1m 38s', model: 'sonnet-4.6', ago: '2m', at: '2:38:44 PM',
+        steps: [
+          { k: 'user', text: 'Drop axios and move the API client to native fetch with a typed wrapper. Keep the retry behaviour.' },
+          { k: 'read', file: 'src/lib/api/client.ts', meta: '204 lines' },
+          { k: 'text', text: 'The client uses axios interceptors for auth refresh and exponential retry. Both port cleanly to `fetch`, but the tests mock axios directly, so I want to bring in `msw` and remove the dependency in one step.' },
+          { k: 'ask', title: 'Run a package manager command', cmd: 'pnpm remove axios && pnpm add -D msw@2', text: 'This changes package.json and the lockfile in the session worktree. Nothing is pushed to main.' },
+        ],
+        pending: [], files: [], hunks: [], agents: [],
+        term: [
+          this.o('git worktree add ../checkout-web-refactor refactor/api-client', 'cmd'),
+          this.o("Preparing worktree (new branch 'refactor/api-client')", 'dim'),
+          this.o('HEAD is now at 8f2c1ab chore: bump vite to 6.1', 'dim'),
+          this.o('waiting for approval: pnpm remove axios', 'err'),
+        ],
+      },
+      s4: {
+        id: 's4', project: 'checkout-web', title: 'Split vendor bundle', branch: 'perf/bundle-split',
+        worktree: '~/code/checkout-web-perf', status: 'running', elapsed: '2m 51s', model: 'sonnet-4.6', ago: 'now',
+        activity: 'Waiting on 3 subagents', at: '2:37:11 PM',
+        steps: [
+          { k: 'user', text: 'First paint on /checkout is 2.4s on mid-tier Android. Find what’s in the vendor chunk and split it. Fan out if that’s faster.' },
+          { k: 'think', text: 'Thought for 8s', meta: 'planned 3 parallel tracks', body: [
+            'A 842kB vendor chunk on a mid-tier Android is the whole story — parse time dominates, not network.',
+            'Three tracks can run at once: measure what is actually in the chunk, find the routes that pull the heaviest deps, and check which of those deps have lighter drop-in replacements.',
+            'Splitting by route is only worth it if the shared baseline stays under ~150kB, so the measurement comes first.',
+          ] },
+          { k: 'run', cmd: 'pnpm build --report', dur: '18.4s', ok: true, out: [
+            { t: 'dist/assets/vendor-B8xK2.js   842.1 kB │ gzip: 261.4 kB', dim: true },
+            { t: 'dist/assets/index-4mQ0p.js    118.7 kB │ gzip:  38.2 kB', dim: true },
+            { t: '(!) Some chunks are larger than 500 kB', err: true },
+          ] },
+          { k: 'spawn', text: 'Three tracks, one worktree each', agents: [
+            { name: 'bundle-audit', task: 'Map vendor chunk by package', pct: 100 },
+            { name: 'route-split', task: 'Lazy-load /checkout + /account', pct: 62 },
+            { name: 'icon-prune', task: 'Replace icon barrel imports', pct: 34 },
+          ] },
+        ],
+        pending: [
+          { k: 'text', text: 'bundle-audit came back: `date-fns` locales are 214 kB of the vendor chunk and only `en-US` is ever loaded. Before folding that into the route-split track I need a call on how far to go.' },
+          { k: 'question', meta: 'blocks route-split', text: 'How should I handle the date-fns locale bundle?', options: [
+            { name: 'Ship en-US only', sub: 'Alias the locale import. Saves 214 kB now, breaks any future locale without a build change.', key: '1' },
+            { name: 'Lazy-load per locale', sub: 'Dynamic import keyed on the user’s locale. Keeps every language, adds a request on non-en sessions.', key: '2' },
+            { name: 'Swap for Temporal + Intl', sub: 'Drops the dependency entirely. Largest win, touches 31 call sites.', key: '3' },
+          ] },
+        ],
+        files: [
+          { path: 'vite.config.ts', add: 24, del: 3 },
+          { path: 'src/routes/checkout.lazy.tsx', add: 31, del: 0 },
+        ],
+        hunks: [this.pd(28, 28, [
+          '@@ -28,6 +28,16 @@ export default defineConfig({',
+          '   build: {',
+          '+    rollupOptions: {',
+          '+      output: {',
+          '+        manualChunks: {',
+          '+          react: ["react", "react-dom"],',
+          '+          forms: ["react-hook-form", "zod"],',
+          '+        },',
+          '+      },',
+          '+    },',
+          '     target: "es2022",',
+          '   },',
+        ]), this.pd(1, 1, [
+          '@@ -0,0 +1,31 @@ src/routes/checkout.lazy.tsx',
+          '+export const Route = createLazyFileRoute("/checkout")({',
+          '+  component: lazy(() => import("../features/checkout/CheckoutPage")),',
+          '+  pendingComponent: CheckoutSkeleton,',
+          '+});',
+        ])],
+        agents: [
+          { name: 'bundle-audit', task: 'Map every package in the vendor chunk to its byte cost and first-import route.', status: 'done', model: 'haiku-4.5', tokens: '12.4k tok', elapsed: '41s', tool: 'read × 18', pct: 100, finished: true },
+          { name: 'route-split', task: 'Lazy-load /checkout and /account, then verify no waterfall on first paint.', status: 'running', model: 'sonnet-4.6', tokens: '31.8k tok', elapsed: '2m 09s', tool: 'edit vite.config.ts', pct: 62 },
+          { name: 'icon-prune', task: 'Replace barrel imports from the icon package with per-icon paths across 74 files.', status: 'running', model: 'haiku-4.5', tokens: '8.1k tok', elapsed: '1m 12s', tool: 'grep "@icons"', pct: 34 },
+        ],
+        term: [
+          this.o('pnpm build --report', 'cmd'),
+          this.o('vite v6.1.0 building for production...', 'dim'),
+          this.o('✓ 1284 modules transformed.', 'pass'),
+          this.o('dist/assets/vendor-B8xK2.js   842.1 kB │ gzip: 261.4 kB', 'out'),
+          this.o('dist/assets/index-4mQ0p.js    118.7 kB │ gzip:  38.2 kB', 'out'),
+          this.o('(!) Some chunks are larger than 500 kB after minification.', 'err'),
+          this.o('', 'dim'),
+          this.o('git worktree list', 'cmd'),
+          this.o('../checkout-web-perf   8f2c1ab [perf/bundle-split]', 'dim'),
+          this.o('../checkout-web-icons  8f2c1ab [perf/icon-prune]', 'dim'),
+        ],
+      },
+      s5: {
+        id: 's5', project: 'payments-api', title: 'Idempotency keys on webhooks', branch: 'feat/webhook-idem',
+        worktree: '~/code/payments-api-idem', status: 'done', elapsed: '7m 22s', model: 'sonnet-4.6', ago: '3h', at: '11:14:06 AM',
+        steps: [
+          { k: 'user', text: 'Webhook handlers double-charge on provider retries. Add idempotency keys with a 24h TTL store.' },
+          { k: 'edit', file: 'src/webhooks/middleware/idempotent.ts', add: 74, del: 0, open: false, diff: this.pd(0, 0, ['+export const idempotent = (ttlSeconds = 86_400) =>']) },
+          { k: 'done', add: 128, del: 14, dur: '7m 22s', text: 'Keys are hashed from provider id + event id and stored in Redis with a 24h TTL. Duplicate deliveries return the cached response.' },
+        ],
+        pending: [],
+        files: [
+          { path: 'src/webhooks/middleware/idempotent.ts', add: 74, del: 0 },
+          { path: 'src/webhooks/routes.ts', add: 18, del: 6 },
+          { path: 'src/lib/redis.ts', add: 36, del: 8 },
+        ],
+        hunks: [this.pd(1, 1, [
+          '@@ -1,8 +1,20 @@ src/webhooks/middleware/idempotent.ts',
+          '+import { createHash } from "node:crypto";',
+          '+',
+          '+export const idempotent = (ttlSeconds = 86_400) =>',
+          '+  async (req: Request, res: Response, next: NextFunction) => {',
+          '+    const key = createHash("sha256")',
+          '+      .update(`${req.header("x-provider-id")}:${req.body.eventId}`)',
+          '+      .digest("hex");',
+          '+    const cached = await redis.get(`idem:${key}`);',
+          '+    if (cached) return res.status(200).json(JSON.parse(cached));',
+          '+    next();',
+          '+  };',
+        ]), this.pd(12, 12, [
+          '@@ -12,6 +12,10 @@ src/webhooks/routes.ts',
+          '-router.post("/webhooks/:provider", handleWebhook);',
+          '+router.post(',
+          '+  "/webhooks/:provider",',
+          '+  idempotent(86_400),',
+          '+  handleWebhook,',
+          '+);',
+        ]), this.pd(18, 18, [
+          '@@ -18,8 +18,14 @@ src/lib/redis.ts',
+          ' export const client = createClient({ url: env.REDIS_URL });',
+          '+',
+          '+export const setEx = (k: string, v: string, ttl: number) =>',
+          '+  client.set(k, v, { EX: ttl });',
+        ])],
+        agents: [],
+        term: [this.o('pnpm test src/webhooks', 'cmd'), this.o('Tests  31 passed (31)', 'pass')],
+      },
+      s6: {
+        id: 's6', project: 'payments-api', title: 'Rate limit per merchant', branch: 'feat/merchant-limits',
+        worktree: '~/code/payments-api-limits', status: 'error', elapsed: '0m 46s', model: 'haiku-4.5', ago: '1d', at: '4:02:51 PM',
+        steps: [
+          { k: 'user', text: 'Add a token-bucket rate limiter scoped per merchant id.' },
+          { k: 'run', cmd: 'pnpm install', dur: '46s', fail: true, out: [
+            { t: 'ERR_PNPM_FETCH_404  GET https://registry.internal/@ant/limiter', err: true },
+            { t: 'The internal registry is unreachable from this worktree.', dim: true },
+          ] },
+        ],
+        pending: [], files: [], hunks: [], agents: [],
+        term: [this.o('pnpm install', 'cmd'), this.o('ERR_PNPM_FETCH_404 @ant/limiter', 'err')],
+      },
+      s7: {
+        id: 's7', project: 'design-tokens', title: 'Sync tokens from Figma', branch: 'chore/token-sync',
+        worktree: '~/code/design-tokens', status: 'done', elapsed: '3m 08s', model: 'haiku-4.5', ago: '2d', at: '9:31:12 AM',
+        steps: [
+          { k: 'user', text: 'Pull the latest token export and regenerate the CSS variables.' },
+          { k: 'done', add: 212, del: 198, dur: '3m 08s', text: '41 tokens changed, 6 added, none removed. The radius scale moved from 4px to 2px steps.' },
+        ],
+        pending: [],
+        files: [{ path: 'src/tokens/colors.css', add: 96, del: 88 }, { path: 'src/tokens/radius.css', add: 18, del: 12 }],
+        hunks: [
+          this.pd(1, 1, ['@@ -1,6 +1,6 @@ src/tokens/colors.css', '---color-brand-500: #1A33FF;', '+--color-brand-500: #3B82F6;']),
+          this.pd(4, 4, ['@@ -4,4 +4,4 @@ src/tokens/radius.css', '---radius-sm: 8px;', '+--radius-sm: 10px;']),
+        ],
+        agents: [], term: [this.o('pnpm tokens:build', 'cmd'), this.o('wrote 4 files', 'pass')],
+      },
+      sNew: {
+        id: 'sNew', project: 'checkout-web', title: 'New session', branch: 'main', worktree: '~/code/checkout-web',
+        status: 'new', elapsed: '', model: 'sonnet-4.6', ago: '', at: '',
+        steps: [], pending: [], files: [], hunks: [], agents: [],
+        term: [this.o('git status', 'cmd'), this.o('On branch main — working tree clean', 'dim')],
+      },
+    };
+  }
+
+  componentDidMount() { this.kick(); document.addEventListener('keydown', this.onKey); this.uTimer = setInterval(this.ultraTick, 520); }
+  componentWillUnmount() { Object.values(this.state.sessions).forEach(s => clearTimeout(s.timer)); document.removeEventListener('keydown', this.onKey); clearInterval(this.uTimer); }
+
+  onKey = e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); this.setState(s => ({ palette: !s.palette })); }
+    if (e.key === 'Escape') this.setState({ palette: false, menu: null });
+  };
+
+  cur() { return this.state.sessions[this.state.sid]; }
+  scrollEnd() { if (this.sc) this.sc.scrollTop = this.sc.scrollHeight; }
+
+  halt(s) {
+    if (!s) return;
+    if (s.typing) { s.typing.step.text = s.typing.full; s.typing.step.streaming = false; s.typing = null; }
+    s.run = (s.run || 0) + 1;
+    clearTimeout(s.timer);
+  }
+
+  kick() {
+    const s = this.cur();
+    if (!s) return;
+    this.halt(s);
+    if (s.status !== 'running' || !s.pending.length) return;
+    const run = s.run;
+    s.timer = setTimeout(() => this.next(s, run), 1100);
+  }
+
+  next(s, run) {
+    if (!s || s.run !== run || !s.pending.length) return;
+    const item = s.pending.shift();
+    const later = (fn, ms) => { s.timer = setTimeout(() => { if (s.run === run) fn(); }, ms); };
+    const paint = () => { this.forceUpdate(); if (this.cur() === s) this.scrollEnd(); };
+    if (item.k === 'text') {
+      const full = item.text;
+      const step = Object.assign({}, item, { text: '', streaming: true });
+      s.steps.push(step);
+      s.typing = { step, full };
+      const type = () => {
+        step.text = full.slice(0, step.text.length + 3);
+        paint();
+        if (step.text.length < full.length) later(type, 16);
+        else { step.streaming = false; s.typing = null; this.forceUpdate(); later(() => this.next(s, run), 600); }
+      };
+      later(type, 16);
+    } else {
+      s.steps.push(Object.assign({}, item));
+      if (item.k === 'done') s.status = 'done';
+      if (item.k === 'question') s.status = 'waiting';
+      paint();
+      if (item.k !== 'question') later(() => this.next(s, run), item.k === 'run' ? 1500 : 800);
+    }
+  }
+
+  pick = id => {
+    this.halt(this.cur());
+    const s = this.state.sessions[id];
+    this.setState({ sid: id, palette: false, menu: null, fileIdx: 0, rewind: null, tab: s.agents.length ? 'agents' : 'diff', wide: s.status === 'done' && s.files.length > 3 },
+      () => { this.scrollEnd(); this.kick(); });
+  };
+
+  send = () => {
+    const v = (this.state.composer || '').trim();
+    const s = this.cur();
+    if (!v || !s) return;
+    s.steps.push({ k: 'user', text: v });
+    s.status = 'running';
+    s.activity = 'Reading the workspace';
+    s.pending = s.pending.concat([
+      { k: 'think', text: 'Thought for 4s', meta: 'scanned 12 files', body: [
+        'Reading the workspace before touching anything — the request names a symptom, not a location.',
+        'Worth checking whether an existing test already covers this path; if it does, the fastest proof is to make it fail first.',
+      ] },
+      { k: 'read', file: 'src/features/cart/useCartTotals.ts', meta: '142 lines' },
+      { k: 'text', text: 'Picking that up now. I will work in `' + s.worktree + '` and show a diff before anything touches `' + s.branch + '`.' },
+    ]);
+    this.setState({ composer: '' }, () => { this.scrollEnd(); this.kick(); });
+  };
+
+  approve = () => {
+    const s = this.cur();
+    s.steps = s.steps.filter(x => x.k !== 'ask');
+    s.status = 'running';
+    s.activity = 'Installing packages';
+    s.files = [
+      { path: 'src/lib/api/client.ts', add: 92, del: 61 },
+      { path: 'src/lib/api/retry.ts', add: 48, del: 12 },
+      { path: 'package.json', add: 4, del: 3 },
+    ];
+    s.hunks = [this.pd(18, 18, [
+      '@@ -18,9 +18,14 @@ src/lib/api/client.ts',
+      '-const res = await axios.get<T>(url, { headers });',
+      '+const res = await fetch(url, { headers, signal });',
+      '+if (!res.ok) throw new ApiError(res.status, await res.text());',
+    ]), this.pd(1, 1, ['@@ -0,0 +1,48 @@ src/lib/api/retry.ts', '+export const backoff = (n: number) => 2 ** n * 100;']),
+      this.pd(20, 20, ['@@ -20,4 +20,4 @@ package.json', '-    "axios": "^1.7.9",', '+    "msw": "^2.6.4",'])];
+    s.pending = [
+      { k: 'run', cmd: 'pnpm remove axios && pnpm add -D msw@2', dur: '6.2s', ok: true, out: [
+        { t: '- axios 1.7.9', dim: true }, { t: '+ msw 2.6.4', pass: true }, { t: 'Done in 6.2s', dim: true }] },
+      { k: 'text', text: 'axios is gone. Porting the interceptors to a `fetch` wrapper with the same retry curve, then rewriting the client tests against msw handlers.' },
+      { k: 'edit', file: 'src/lib/api/client.ts', add: 92, del: 61, open: true, diff: this.pd(0, 0, [
+        '-const res = await axios.get<T>(url, { headers });',
+        '+const res = await fetch(url, { headers, signal });',
+        '+if (!res.ok) throw new ApiError(res.status, await res.text());',
+      ]) },
+      { k: 'done', add: 144, del: 76, dur: '3m 12s', text: 'Retry curve and auth refresh behave identically; `msw` replaces the axios mocks in 14 tests.' },
+    ];
+    this.forceUpdate(); this.kick();
+  };
+
+  deny = () => {
+    const s = this.cur();
+    s.steps = s.steps.filter(x => x.k !== 'ask');
+    s.steps.push({ k: 'text', text: 'Understood — leaving the dependencies alone. I will write the `fetch` wrapper alongside axios and keep the existing mocks so nothing in the lockfile changes.' });
+    s.status = 'done'; this.forceUpdate();
+  };
+
+  stop = () => { const s = this.cur(); this.halt(s); s.status = 'done'; this.forceUpdate(); };
+
+  answerQ = (i, name) => {
+    const s = this.cur();
+    s.steps[i].answer = name;
+    s.status = 'running';
+    s.activity = 'Applying the locale decision';
+    s.pending = [
+      { k: 'text', text: 'Going with `' + name + '`. Handing that to route-split — it already owns `vite.config.ts`, so the locale alias lands in the same chunk pass.' },
+      { k: 'edit', file: 'vite.config.ts', add: 24, del: 3, open: true, diff: this.pd(0, 0, [
+        '+      alias: {',
+        '+        "date-fns/locale": "date-fns/locale/en-US",',
+        '+      },',
+      ]) },
+    ];
+    this.forceUpdate(); this.kick();
+  };
+
+  parts(t) {
+    const out = [];
+    String(t || '').split('`').forEach((seg, i) => { if (seg) out.push(i % 2 ? { code: true, t: seg } : { plain: true, t: seg }); });
+    return out;
+  }
+
+  ext(path) {
+    const n = path.split('/').pop();
+    const e = n.includes('.') ? n.split('.').pop() : '';
+    const tints = { ts: '#60a5fa', tsx: '#38bdf8', js: '#fbbf24', jsx: '#fbbf24', css: '#a78bfa', json: '#fbbf24', md: '#a1a1a1', mjs: '#fbbf24' };
+    return { ext: (e || '?').slice(0, 3).toUpperCase(), tint: tints[e] || '#8a8a8a' };
+  }
+
+  traceFiles(idx) {
+    const steps = this.cur().steps;
+    let start = 0;
+    for (let n = idx - 1; n >= 0; n--) if (steps[n].k === 'user') { start = n; break; }
+    if (start === 0) return this.cur().files.slice();
+    const byPath = {}, out = [];
+    for (let n = start; n < idx; n++) {
+      const s = steps[n];
+      if (s.k !== 'edit' || !s.file) continue;
+      if (!byPath[s.file]) { byPath[s.file] = { path: s.file, add: 0, del: 0 }; out.push(byPath[s.file]); }
+      byPath[s.file].add += s.add || 0;
+      byPath[s.file].del += s.del || 0;
+    }
+    return out;
+  }
+
+  tree(list) {
+    const rows = [], seen = {};
+    const files = list.slice().sort((a, b) => a.path.localeCompare(b.path));
+    files.forEach(f => {
+      const segs = f.path.split('/');
+      segs.slice(0, -1).forEach((seg, i) => {
+        const key = segs.slice(0, i + 1).join('/');
+        if (seen[key]) return;
+        seen[key] = true;
+        const under = files.filter(x => x.path.startsWith(key + '/'));
+        rows.push({
+          folder: true, name: seg, depth: i,
+          add: '+' + under.reduce((a, x) => a + x.add, 0),
+          del: '−' + under.reduce((a, x) => a + x.del, 0),
+        });
+      });
+      rows.push(Object.assign({ file: true, name: segs[segs.length - 1], depth: segs.length - 1, add: '+' + f.add, del: '−' + f.del }, this.ext(f.path)));
+    });
+    return rows.map(r => Object.assign(r, { pad: (12 + r.depth * 18) + 'px' }));
+  }
+
+  renderVals() {
+    const st = this.state, S = st.sessions, cur = S[st.sid] || S.s1;
+    const eIdx = ['off', 'low', 'medium', 'high', 'xhigh', 'max'].indexOf(st.effort);
+    const order = { 'checkout-web': ['s1', 's4', 's3', 's2', 'sNew'], 'payments-api': ['s5', 's6'], 'design-tokens': ['s7'] };
+    const meta = [
+      { id: 'checkout-web', tint: 'blue' },
+      { id: 'payments-api', tint: 'green' },
+      { id: 'design-tokens', tint: 'violet' },
+    ];
+    const words = { running: 'Working', waiting: 'Waiting', done: 'Completed', error: 'Failed', new: '' };
+
+    const projects = meta.map(p => {
+      const ids = order[p.id], open = !!st.open[p.id];
+      return {
+        name: p.id, open, chev: open ? '▾' : '▸',
+        tintBlue: p.tint === 'blue', tintGreen: p.tint === 'green', tintViolet: p.tint === 'violet',
+        hasRunning: ids.some(i => S[i].status === 'running'),
+        more: p.id === 'checkout-web',
+        toggle: () => this.setState(s => ({ open: Object.assign({}, s.open, { [p.id]: !s.open[p.id] }) })),
+        sessions: ids.map(i => {
+          const s = S[i], fresh = ['now', '2m', '18m'].indexOf(s.ago) >= 0;
+          return {
+            title: s.title, ago: s.ago, statusWord: words[s.status],
+            active: st.sid === i, inactive: st.sid !== i,
+            showStatus: st.sid !== i && s.status !== 'new' && fresh,
+            running: s.status === 'running', waiting: s.status === 'waiting',
+            doneRecent: s.status === 'done', error: s.status === 'error',
+            click: () => this.pick(i),
+          };
+        }),
+      };
+    });
+
+    const isTool = k => k === 'read' || k === 'edit' || k === 'run';
+    const rows = [];
+    if (st.merge) {
+      let i = 0;
+      while (i < cur.steps.length) {
+        if (isTool(cur.steps[i].k)) {
+          let j = i;
+          while (j < cur.steps.length && isTool(cur.steps[j].k)) j++;
+          const grp = cur.steps.slice(i, j);
+          if (grp.length > 1) {
+            rows.push({ k: 'group', at: i, items: grp });
+            if (st.openTools[i]) grp.forEach((s, n) => rows.push({ s, i: i + n }));
+          } else rows.push({ s: grp[0], i });
+          i = j;
+        } else { rows.push({ s: cur.steps[i], i }); i++; }
+      }
+    } else cur.steps.forEach((s, i) => rows.push({ s, i }));
+
+    const steps = rows.map(row => {
+      if (row.k === 'group') {
+        const reads = row.items.filter(x => x.k === 'read').length;
+        const edits = row.items.filter(x => x.k === 'edit');
+        const runs = row.items.filter(x => x.k === 'run').length;
+        const bits = [];
+        if (reads) bits.push('Read ' + reads + (reads === 1 ? ' file' : ' files'));
+        if (edits.length) bits.push('Edited ' + edits.length + (edits.length === 1 ? ' file' : ' files'));
+        if (runs) bits.push('Ran ' + runs + (runs === 1 ? ' command' : ' commands'));
+        const add = edits.reduce((n, x) => n + (x.add || 0), 0), del = edits.reduce((n, x) => n + (x.del || 0), 0);
+        const open = !!st.openTools[row.at];
+        return {
+          isGroup: true, groupCount: row.items.length + ' STEPS', groupText: bits.join(' · '),
+          hasDiff: add > 0 || del > 0, addTxt: '+' + add, delTxt: '−' + del,
+          chev: open ? '▾' : '▸',
+          toggleGroup: () => this.setState(s2 => ({ openTools: Object.assign({}, s2.openTools, { [row.at]: !open }) })),
+        };
+      }
+      const s = row.s, i = row.i;
+      const tf = s.k === 'done' ? this.traceFiles(i) : [];
+      return {
+      tree: this.tree(tf),
+      isUser: s.k === 'user', isText: s.k === 'text', isThink: s.k === 'think', isRead: s.k === 'read',
+      isEdit: s.k === 'edit', isRun: s.k === 'run', isSpawn: s.k === 'spawn', isAsk: s.k === 'ask', isDone: s.k === 'done',
+      isAdvise: s.k === 'advise', trigger: s.trigger, cost: s.cost,
+      isRewind: s.k === 'rewind',
+      canRewind: s.k === 'user' && i < cur.steps.length - 1,
+      rewindOpen: st.rewind === i,
+      openRewind: () => this.setState({ rewind: i }),
+      cancelRewind: () => this.setState({ rewind: null }),
+      rewindChat: () => this.doRewind(i, false),
+      rewindCode: () => this.doRewind(i, true),
+      rewindChatSub: 'Keeps every file exactly as it is now',
+      rewindCodeSub: this.rewindFiles(i).length
+        ? 'Also restores ' + this.rewindFiles(i).length + (this.rewindFiles(i).length === 1 ? ' file' : ' files') + ' to their state at this point'
+        : 'No files were changed after this point',
+      isWf: s.k === 'wf', wf: s.k === 'wf' ? this.cardStats(s.wid) : {},
+      wfClick: () => this.openFlow(s.wid),
+      wfBorder: (st.tab === 'flow' && st.right && st.wid === s.wid) ? 'var(--line-3)' : 'var(--line-1)',
+      wfCta: (st.tab === 'flow' && st.right && st.wid === s.wid) ? 'Open →' : 'View →',
+      isQuestion: s.k === 'question', unanswered: s.k === 'question' && !s.answer, answered: !!s.answer, answer: s.answer,
+      options: (s.options || []).map(o => ({ name: o.name, sub: o.sub, key: o.key, click: () => this.answerQ(i, o.name) })),
+      text: s.text, parts: this.parts(s.text), meta: s.meta, file: s.file, cmd: s.cmd, dur: s.dur || cur.elapsed,
+      title: s.title, at: cur.at, streaming: !!s.streaming, ok: !!s.ok, fail: !!s.fail, open: !!s.open,
+      chev: s.open ? '▾' : '▸', fileCount: String(tf.length),
+      addTxt: s.add != null ? '+' + s.add : '', delTxt: s.del != null ? '−' + s.del : '',
+      diff: s.diff || [], out: s.out || [], body: (s.body || []).map(t => ({ t })),
+      agents: (s.agents || []).map(a => ({ name: a.name, task: a.task, tokens: a.pct + '%', pctW: a.pct + '%' })),
+      toggle: () => { cur.steps[i].open = !cur.steps[i].open; this.forceUpdate(); },
+      };
+    });
+
+    const files = cur.files.map((f, i) => Object.assign({
+      path: f.path, addTxt: '+' + f.add, delTxt: '−' + f.del, active: st.fileIdx === i,
+      click: () => this.setState({ fileIdx: i }),
+    }, this.ext(f.path)));
+
+    const tabDefs = [
+      { key: 'diff', label: 'Diff', short: 'DF', count: (cur.status !== 'running' && cur.files.length) ? String(cur.files.length) : '' },
+      { key: 'agents', label: 'Agents', short: 'AG', count: cur.agents.length ? String(cur.agents.length) : '' },
+      { key: 'term', label: 'Terminal', short: 'TM', count: '' },
+      { key: 'flow', label: 'Workflow', short: 'WF', count: '' },
+    ];
+
+    const EFFORTS = ['off', 'low', 'medium', 'high', 'xhigh', 'max'];
+    const effortNames = { off: 'Off', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra High', max: 'Max' };
+    const effortShort = { off: 'Off', low: 'Low', medium: 'Med', high: 'High', xhigh: 'X-High', max: 'Max' };
+    const verbNames = { concise: 'Concise', normal: 'Normal', detailed: 'Detailed' };
+    const accessNames = { auto: 'Auto Mode', edits: 'Accept edit only', destructive: 'Ask destructive only', read: 'Read only' };
+
+    const W = this.wf(), T = this.wfT(), wEnd = this.wfEnd(W);
+    const prog = a => Math.max(0, Math.min(1, (T - a.start) / a.dur));
+    const startedA = a => T > a.start;
+    const rates = { 'opus-4.2': 0.00006, 'sonnet-4.6': 0.000015, 'haiku-4.5': 0.000004 };
+    const allAgents = [].concat.apply([], W.phases.map(p => p.agents));
+    const spent = a => a.tok * prog(a);
+    const agCost = a => spent(a) * (rates[a.model] || 0.00002);
+    const cost = allAgents.reduce((n, a) => n + agCost(a), 0);
+    const modelNames = ['opus-4.2', 'sonnet-4.6', 'haiku-4.5'];
+    const maxModel = Math.max(1, ...modelNames.map(m => allAgents.filter(a => a.model === m).reduce((n, a) => n + spent(a), 0)));
+    const wRunning = W.live && T < wEnd;
+    const nothingStarted = !allAgents.some(startedA);
+
+    const phases = W.phases.map((p, i) => {
+      const started = p.agents.filter(startedA), done = p.agents.filter(a => prog(a) >= 1);
+      const pct = p.agents.reduce((n, a) => n + prog(a), 0) / p.agents.length;
+      const running = started.length > 0 && done.length < p.agents.length;
+      const allDone = done.length === p.agents.length;
+      const open = st.uphase[i] !== false && (started.length > 0 || st.uphase[i] === true || nothingStarted);
+      return {
+        num: String(i + 1), name: p.name, gate: p.gate,
+        modeLabel: p.mode === 'parallel' ? 'parallel × ' + p.agents.length : 'sequential',
+        statLabel: allDone ? 'Done' : running ? done.length + ' of ' + p.agents.length : 'Queued',
+        statColor: allDone ? 'var(--ok)' : running ? 'var(--info)' : 'var(--fg-4)',
+        pctW: Math.round(pct * 100) + '%',
+        numBg: running ? 'var(--accent)' : 'var(--card-hi)',
+        numColor: running ? '#fff' : 'var(--fg-2)',
+        open, chev: open ? '▾' : '▸',
+        toggle: () => this.setState(st2 => ({ uphase: Object.assign({}, st2.uphase, { [i]: !open }) })),
+        agents: p.agents.map(a => {
+          const pr = prog(a), isDone = pr >= 1, queued = !startedA(a);
+          const el = Math.max(0, Math.min(T - a.start, a.dur));
+          return {
+            name: a.name, model: a.model, scope: a.scope, modelColor: this.modelTint(a.model),
+            tools: (a.tools || []).map(t => ({ t })),
+            color: queued ? 'var(--fg-4)' : isDone ? 'var(--ok)' : 'var(--info)',
+            pctW: Math.round(pr * 100) + '%',
+            tokens: queued ? '—' : this.kTok(spent(a)),
+            cost: queued ? '—' : '$' + agCost(a).toFixed(2),
+            elapsed: queued ? '—' : this.mmss(el),
+            stat: queued ? 'Queued' : isDone ? 'Done' : 'Running',
+            dim: queued ? '.55' : '1',
+            spawned: !!a.spawnNote, spawnNote: a.spawnNote || '',
+          };
+        }),
+      };
+    });
+
+    const events = [];
+    allAgents.forEach(a => {
+      if (startedA(a)) events.push({ at: a.start, text: a.spawnNote ? a.name + ' — ' + a.spawnNote : a.name + ' started on ' + a.model, tint: a.spawnNote ? 'var(--violet)' : 'var(--fg-2)' });
+      if (prog(a) >= 1) events.push({ at: a.start + a.dur, text: a.name + ' finished · ' + this.kTok(a.tok) + ' tokens', tint: 'var(--fg-3)' });
+    });
+    events.sort((x, y) => y.at - x.at);
+
+    const donePhases = phases.filter(p => p.statLabel === 'Done').length;
+    const liveAgents = allAgents.filter(a => startedA(a) && prog(a) < 1).length;
+
+    return {
+      viewMenu: st.menu === 'view',
+      toggleViewMenu: () => this.setState(s => ({ menu: s.menu === 'view' ? null : 'view' })),
+      viewOptions: [
+        { on: st.merge, name: 'Merge tool calls', sub: 'Collapse runs of reads, edits and commands into one line. Diff totals show beside the summary.', click: () => this.setState(s => ({ merge: !s.merge })) },
+        { on: st.wide, name: 'Wide inspector', sub: 'Give the right panel more room for diffs and workflow phases.', click: () => this.setState(s => ({ wide: !s.wide })) },
+      ].map(o => ({
+        name: o.name, sub: o.sub, click: o.click,
+        trackBg: o.on ? 'var(--accent)' : 'var(--line-3)', knobX: o.on ? '13px' : '2px',
+      })),
+      theme: st.theme, themeGlyph: st.theme === 'night' ? '☾' : '☀',
+      workflows: Object.keys(this.wfs()).map(id => {
+        const w = this.wfs()[id], active = st.tab === 'flow' && st.right && st.wid === id;
+        return {
+          name: w.label, slug: w.name, click: () => this.openFlow(id), active,
+          tint: active ? 'var(--fg-0)' : 'var(--fg-1)', weight: active ? '600' : '400',
+          running: w.live, idle: !w.live,
+          meta: w.live ? this.mmss(this.state.t) : id === 'nightly-refactor' ? '02:00' : '2d',
+        };
+      }),
+      newWorkflow: () => this.openFlow('ship-it'),
+
+      flow: {
+        name: W.name, label: W.label, trigger: W.trigger, file: W.file, about: W.about,
+        running: wRunning && !st.paused, paused: wRunning && st.paused,
+        finished: !W.live && W.status !== 'scheduled',
+        scheduled: W.status === 'scheduled', nextRun: W.next || '',
+        clock: this.mmss(Math.min(T, wEnd)),
+        phaseLabel: (donePhases + (wRunning ? 1 : 0)) + ' of ' + phases.length + ' phases',
+        pauseLabel: st.paused ? 'Resume' : 'Pause',
+        togglePause: () => this.setState(s2 => ({ paused: !s2.paused })),
+        restart: () => this.setState({ t: 0, paused: false }),
+        phases, policies: W.policies, cols: st.wide ? '1fr 1fr' : '1fr',
+        models: modelNames.map(m => {
+          const list = allAgents.filter(a => a.model === m), tok = list.reduce((n, a) => n + spent(a), 0);
+          const n = list.filter(startedA).length;
+          return {
+            name: m, color: this.modelTint(m), tokens: tok > 0 ? this.kTok(tok) : '—',
+            agents: n === 1 ? '1 agent' : n + ' agents', w: Math.round((tok / maxModel) * 100) + '%',
+          };
+        }),
+        cost: cost > 0 ? '$' + cost.toFixed(2) : W.policies[2].value,
+        costLabel: cost > 0 ? 'Run cost so far' : 'Budget for this run',
+      },
+      toggleTheme: () => this.setState(s => ({ theme: s.theme === 'night' ? 'day' : 'night' })),
+      projects,
+      cur: {
+        project: cur.project, title: cur.title,
+        branch: cur.branch, worktree: cur.worktree, elapsed: cur.elapsed,
+        running: cur.status === 'running', waiting: cur.status === 'waiting',
+        isNew: cur.status === 'new', hasSteps: cur.steps.length > 0,
+        activity: cur.activity || 'Thinking',
+      },
+      steps, tree: this.tree(cur.files),
+      placeholder: cur.status === 'new' ? 'Describe the task — ⏎ to send, ⇧⏎ for a newline' : 'Ask for follow-up changes or attach images',
+      suggestions: [
+        { title: 'Audit the checkout route', sub: 'Dead code, unused deps, a11y gaps', click: () => this.setState({ composer: 'Audit the /checkout route for dead code, unused dependencies and accessibility gaps.' }) },
+        { title: 'Write tests for useCartTotals', sub: 'Discounts, tax, currency edge cases', click: () => this.setState({ composer: 'Write tests for useCartTotals covering discounts, tax and multi-currency edge cases.' }) },
+        { title: 'Upgrade to React 19', sub: 'Codemod, then fix what breaks', click: () => this.setState({ composer: 'Upgrade this app to React 19 — run the codemod, then fix whatever breaks.' }) },
+        { title: 'Explain the payment flow', sub: 'Trace a charge from cart to settlement', click: () => this.setState({ composer: 'Trace a charge from the cart through to settlement and explain each hop.' }) },
+      ],
+
+      advisorUsage: st.advisor === 'off' ? 'Not consulted' : '2 consults · 1.3k tokens · $0.08',
+      advisorOptions: [
+        { id: 'off', name: 'Off', sub: 'Run on ' + cur.model + ' alone.' },
+        { id: 'opus-4.2', name: 'opus-4.2', sub: 'Recommended with sonnet. Consulted a few times per task, not every turn.' },
+        { id: 'opus-4.2-thinking', name: 'opus-4.2 · extended thinking', sub: 'Slower and pricier. For migrations and architecture calls.' },
+      ].map(o => ({
+        name: o.name, sub: o.sub, check: st.advisor === o.id ? '✓' : '',
+        border: st.advisor === o.id ? 'var(--line-3)' : 'transparent',
+        bg: st.advisor === o.id ? 'var(--card)' : 'transparent',
+        click: () => this.setState({ advisor: o.id }),
+      })),
+
+      modelLabel: cur.model,
+      modelMenu: st.menu === 'model',
+      toggleModelMenu: () => this.setState(s => ({ menu: s.menu === 'model' ? null : 'model' })),
+      modelOptions: [
+        { id: 'sonnet-4.6', sub: 'Balanced. Right for most coding work.' },
+        { id: 'haiku-4.5', sub: 'Fastest. Good for sweeps and subagents.' },
+        { id: 'opus-4.2', sub: 'Deepest reasoning. Slower and pricier.' },
+      ].map(m => ({ name: m.id, sub: m.sub, check: cur.model === m.id ? '✓' : '', click: () => { cur.model = m.id; this.setState({ menu: null }); } })),
+
+      effortLabel: st.effort === 'off' ? 'No thinking' : effortNames[st.effort] + ' effort',
+      effortMenu: st.menu === 'effort',
+      toggleEffortMenu: () => this.setState(s => ({ menu: s.menu === 'effort' ? null : 'effort' })),
+      bar1: eIdx >= 1, bar1off: eIdx < 1,
+      bar2: eIdx >= 3, bar2off: eIdx < 3,
+      bar3: eIdx >= 5, bar3off: eIdx < 5,
+      effortIdx: eIdx,
+      effortPct: (eIdx / 5 * 100) + '%',
+      effortName: effortNames[st.effort],
+      effortBudget: { off: 'No thinking budget', low: '4k token budget', medium: '16k token budget', high: '64k token budget', xhigh: '128k token budget', max: 'Unbounded thinking' }[st.effort],
+      effortModelNote: cur.model + ' offers all six levels.',
+      effortTicks: EFFORTS.map((id, i) => ({
+        name: effortShort[id], at: i / 5 * 100,
+        fill: i <= eIdx ? 'rgba(255,255,255,.30)' : 'rgba(255,255,255,.16)',
+      })),
+      setEffort: e => this.setState({ effort: EFFORTS[+e.target.value] }),
+      effortHover: st.effortHover,
+      effortHoverOn: () => this.setState({ effortHover: true }),
+      effortHoverOff: () => this.setState({ effortHover: false }),
+      verbosityOptions: [
+        { id: 'concise', sub: 'Results and code, almost no narration.' },
+        { id: 'normal', sub: 'A short summary of what changed and why.' },
+        { id: 'detailed', sub: 'Full reasoning, alternatives weighed, follow-ups listed.' },
+      ].map(v => ({
+        name: verbNames[v.id], sub: v.sub, check: st.verbosity === v.id ? '✓' : '',
+        border: st.verbosity === v.id ? 'var(--line-3)' : 'transparent',
+        bg: st.verbosity === v.id ? 'var(--card)' : 'transparent',
+        click: () => this.setState({ verbosity: v.id }),
+      })),
+      settingsOpen: st.settings,
+      openSettings: () => this.setState({ settings: true }),
+      closeSettings: () => this.setState({ settings: false }),
+      stopClick: e => e.stopPropagation(),
+
+      branchMenu: st.menu === 'branch',
+      toggleBranchMenu: () => this.setState(s => ({ menu: s.menu === 'branch' ? null : 'branch' })),
+      branchOptions: [
+        { name: cur.branch, sub: 'this session' },
+        { name: 'main', sub: 'up to date' },
+        { name: 'release/2026.07', sub: '4 behind' },
+        { name: 'New branch from main…', sub: '' },
+      ].map(b => ({ name: b.name, sub: b.sub, check: b.name === cur.branch ? '✓' : '', click: () => this.setState({ menu: null }) })),
+
+      accessLabel: accessNames[st.access],
+      accessMenu: st.menu === 'access',
+      toggleAccessMenu: () => this.setState(s => ({ menu: s.menu === 'access' ? null : 'access' })),
+      accessOptions: [
+        { id: 'auto', sub: 'Edits, commands and commits run without prompts.' },
+        { id: 'edits', sub: 'File edits apply on their own; commands still ask.' },
+        { id: 'destructive', sub: 'Only deletes, force pushes and migrations ask.' },
+        { id: 'read', sub: 'Reads and plans — nothing on disk changes.' },
+      ].map(a => ({ name: accessNames[a.id], sub: a.sub, check: st.access === a.id ? '✓' : '', click: () => this.setState({ access: a.id, menu: null }) })),
+
+      closeMenus: () => this.setState({ menu: null }),
+      ctxUsed: '38.2k / 200k',
+      ctxTitle: 'Context window — 19% used',
+      ctxDash: (0.19 * 62.8).toFixed(1) + ' 62.8',
+      usage: [
+        { label: 'Session usage', left: '38% left', w: '62%', tint: 'var(--accent)', reset: 'Resets 6:20 PM' },
+        { label: 'Weekly limit', left: '71% left', w: '29%', tint: 'var(--fg-2)', reset: 'Resets Mon 9:00 AM' },
+      ],
+
+      composer: st.composer,
+      onCompose: e => this.setState({ composer: e.target.value }),
+      onComposeKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      send: this.send, approve: this.approve, deny: this.deny, stop: this.stop,
+      scrollRef: el => { this.sc = el; },
+      newSession: () => this.pick('sNew'),
+      showDiff: () => this.setState({ right: true, tab: 'diff', wide: true }),
+
+      rightOpen: st.right, rightClosed: !st.right, rightW: st.wide ? 660 : 408,
+      toggleRight: () => this.setState(s => ({ right: !s.right })),
+      toggleWide: () => this.setState(s => ({ wide: !s.wide })),
+      tabs: tabDefs.map(t => ({
+        label: t.label, short: t.short, count: t.count, active: st.tab === t.key,
+        click: () => this.setState({ tab: t.key }),
+        openClick: () => this.setState({ right: true, tab: t.key }),
+      })),
+      tabDiff: st.tab === 'diff' , tabAgents: st.tab === 'agents', tabTerm: st.tab === 'term', tabFlow: st.tab === 'flow',
+      files: cur.status === 'running' ? [] : files,
+      filesPending: cur.status === 'running' && cur.files.length > 0,
+      diffRunning: cur.status === 'running',
+      hunks: (cur.status !== 'running' && cur.files.length) ? (cur.hunks[st.fileIdx] || []) : [],
+      hasDiff: cur.status !== 'running' && cur.files.length > 0,
+      noDiff: cur.status !== 'running' && cur.files.length === 0,
+      diffAdd: cur.status === 'running' ? '' : '+' + cur.files.reduce((a, f) => a + f.add, 0),
+      diffDel: cur.status === 'running' ? '' : '−' + cur.files.reduce((a, f) => a + f.del, 0),
+      fileIdx: cur.files.length ? (st.fileIdx + 1) + ' of ' + cur.files.length : '',
+      agents: cur.agents.map(a => Object.assign({}, a, { pctW: a.pct + '%' })),
+      noAgents: cur.agents.length === 0,
+      term: cur.term,
+
+      palette: st.palette,
+      openPalette: () => this.setState({ palette: true }),
+      closePalette: () => this.setState({ palette: false }),
+      paletteRows: ['s1', 's4', 's3', 's2', 's5'].map(i => {
+        const s = S[i];
+        return { title: s.title, project: s.project, branch: s.branch, running: s.status === 'running', waiting: s.status === 'waiting', click: () => this.pick(i) };
+      }),
+    };
+  }
+}
+</script>
+
+
+</body></html>
