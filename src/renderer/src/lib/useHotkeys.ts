@@ -13,10 +13,13 @@ export function useHotkeys(): void {
 				return;
 			}
 			if (e.key === "Escape") {
-				const { palette, settingsOpen, menu } = getState();
+				const { palette, settingsOpen, menu, newChat } = getState();
 				if (palette) actions.closePalette();
 				if (settingsOpen) actions.closeSettings();
 				if (menu) actions.closeMenus();
+				// Only when nothing is layered over it, and only back to a
+				// session there is one to go back to.
+				else if (newChat && !palette && !settingsOpen && getState().sessionId) actions.closeNewChat();
 			}
 		};
 		document.addEventListener("keydown", onKey);

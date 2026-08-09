@@ -1,44 +1,63 @@
-/* Ported verbatim from the design source: `ant-pi Desktop.dc.html`. */
+/*
+ * macOS's own palette: Apple's system colours and grey ramp.
+ *
+ * The values are written out rather than read from the OS, so the app looks the
+ * same on every machine and the tests see the same colours the user does. What
+ * is *not* Apple's is the structure — which layer sits above which — and that
+ * stays as the design source drew it: `ant-pi Desktop.dc.html`.
+ *
+ * `night` and `day` are the two appearances. The `auto` preference resolves to
+ * one of them from macOS's own setting; see `lib/theme.ts`.
+ */
 
 :root {
-	--desk: #000000;
-	--rail: #131313;
-	--surface: #1c1c1c;
-	--card: #212121;
-	--card-hi: #292929;
-	--code-bg: #2b2b2b;
-	--term: #101010;
+	/* Menus, checkboxes and scrollbars are drawn by the OS, and this is what
+	   tells it which appearance to draw them in. */
+	color-scheme: dark;
 
-	--fg-0: #f4f4f4;
-	--fg-1: #d2d2d2;
-	--fg-2: #a1a1a1;
-	--fg-3: #767676;
-	--fg-4: #565656;
+	/* Surfaces, deepest first — Apple's dark grey ramp, systemGray6 upward. */
+	--desk: #1c1c1e;
+	--rail: #232325;
+	--surface: #2c2c2e;
+	--card: #333336;
+	--card-hi: #3a3a3c;
+	--code-bg: #313134;
+	--term: #161618;
 
-	--line-1: rgba(255, 255, 255, 0.07);
-	--line-2: rgba(255, 255, 255, 0.11);
-	--line-3: rgba(255, 255, 255, 0.17);
+	/* labelColor and its three weaker weights: white at Apple's opacities. */
+	--fg-0: rgba(255, 255, 255, 0.85);
+	--fg-1: rgba(255, 255, 255, 0.72);
+	--fg-2: rgba(255, 255, 255, 0.55);
+	--fg-3: rgba(255, 255, 255, 0.4);
+	--fg-4: rgba(255, 255, 255, 0.3);
 
-	--accent: #3b82f6;
-	--accent-hi: #5a99ff;
+	/* separatorColor, at the three weights this app draws. */
+	--line-1: rgba(255, 255, 255, 0.08);
+	--line-2: rgba(255, 255, 255, 0.13);
+	--line-3: rgba(255, 255, 255, 0.2);
+
+	--accent: #0a84ff; /* systemBlue */
+	--accent-hi: #409cff;
 	--on-accent: #ffffff;
 
-	--ok: #4ade80;
-	--bad: #f87171;
-	--warn: #fbbf24;
-	--info: #60a5fa;
-	--violet: #a78bfa;
+	--ok: #32d74b; /* systemGreen */
+	--bad: #ff453a; /* systemRed */
+	--warn: #ff9f0a; /* systemOrange */
+	--info: #64d2ff; /* systemCyan */
+	--violet: #bf5af0; /* systemPurple */
 
-	--addbg: rgba(74, 222, 128, 0.1);
-	--delbg: rgba(248, 113, 113, 0.09);
-	--menu: oklch(25% 0.03 259);
+	--addbg: rgba(50, 215, 75, 0.12);
+	--delbg: rgba(255, 69, 58, 0.12);
+	/* Every popover takes the composer's own colour, so one does not read as a
+	   different surface from the input it belongs to. */
+	--menu: var(--card);
 
 	--term-fg: #b4b4b4;
 	--term-fg-hi: #f4f4f4;
 	--term-dim: #7a7a7a;
 	--term-gutter: #6e6e6e;
-	--term-pass: #7fe0ad;
-	--term-err: #f87171;
+	--term-pass: #32d74b;
+	--term-err: #ff453a;
 	--term-line: rgba(255, 255, 255, 0.07);
 
 	--sans: Inter, ui-sans-serif, system-ui, "Helvetica Neue", sans-serif;
@@ -46,37 +65,37 @@
 }
 
 [data-theme="day"] {
-	--desk: #d8d8d8;
-	--rail: #f6f6f6;
-	--surface: #ffffff;
-	--card: #fafafa;
-	--card-hi: #f0f0f0;
-	--code-bg: #f0f0f0;
-	--term: #141414;
+	color-scheme: light;
 
-	--fg-0: #171717;
-	--fg-1: #3f3f3f;
-	--fg-2: #6b6b6b;
-	--fg-3: #8f8f8f;
-	--fg-4: #7d7d7d;
+	--desk: #ececec; /* windowBackgroundColor */
+	--rail: #f5f5f7;
+	--surface: #ffffff; /* textBackgroundColor */
+	--card: #fbfbfd;
+	--card-hi: #eeeef0;
+	--code-bg: #f2f2f7; /* systemGray6 */
+
+	--fg-0: rgba(0, 0, 0, 0.85);
+	--fg-1: rgba(0, 0, 0, 0.7);
+	--fg-2: rgba(0, 0, 0, 0.5);
+	--fg-3: rgba(0, 0, 0, 0.36);
+	--fg-4: rgba(0, 0, 0, 0.28);
 
 	--line-1: rgba(0, 0, 0, 0.08);
 	--line-2: rgba(0, 0, 0, 0.12);
 	--line-3: rgba(0, 0, 0, 0.18);
 
-	--accent: #2563eb;
-	--accent-hi: #1d4ed8;
+	--accent: #007aff;
+	--accent-hi: #0060df;
 
-	--ok: #16a34a;
-	--bad: #dc2626;
-	--warn: #b45309;
-	--info: #2563eb;
-	--violet: #7c3aed;
+	--ok: #28cd41;
+	--bad: #ff3b30;
+	--warn: #ff9500;
+	--info: #32ade6;
+	--violet: #af52de;
 
-	--addbg: rgba(22, 163, 74, 0.09);
-	--delbg: rgba(220, 38, 38, 0.07);
-	--menu: oklch(95% 0.015 259);
+	--addbg: rgba(40, 205, 65, 0.12);
+	--delbg: rgba(255, 59, 48, 0.1);
 }
 
-/* The terminal panes keep their dark palette in both themes: the design paints
-   them on `--term`, which stays near-black on day. */
+/* The terminal panes keep their dark palette in both appearances: `--term` is
+   defined once, and macOS Terminal is dark on a light desktop too. */

@@ -12,16 +12,34 @@
  */
 
 import { useSyncExternalStore } from "react";
-import type { InspectorTab, PiSettings, Preferences, Project, Session, SessionSummary, Step, Theme, WorkflowRun } from "@shared/model";
+import type {
+	InspectorTab,
+	PiCommand,
+	PiModel,
+	PiSettings,
+	Preferences,
+	Project,
+	Session,
+	SessionSummary,
+	SkillList,
+	SkillMode,
+	Step,
+	ThinkingLevel,
+	WorkflowRun,
+} from "@shared/model";
 import { DEFAULT_PREFERENCES, errorMessage } from "@shared/model";
 import { api } from "./api";
+import type { Appearance } from "./theme";
+import { nextTheme, prefersDark, resolveTheme } from "./theme";
 
-export type MenuId = "view" | "model" | "effort" | "access";
+export type MenuId = "view" | "model" | "effort" | "access" | "newdir" | "defmodel";
 
-export type SettingsSection = "model" | "permissions" | "workflows" | "about";
+export type SettingsSection = "model" | "permissions" | "skills" | "workflows" | "about";
 
 export interface AppState {
 	readonly prefs: Preferences;
+	/** macOS's appearance, watched by the window. Read only through `appearance`. */
+	readonly systemDark: boolean;
 	readonly projects: readonly Project[];
 	readonly summaries: Readonly<Record<string, SessionSummary>>;
 	/** Loaded transcripts, keyed by session id. */
@@ -40,6 +58,12 @@ export interface AppState {
 	readonly tab: InspectorTab;
 	readonly menu: MenuId | null;
 	readonly palette: boolean;
+	/** The new-chat page, which takes the centre pane in place of a transcript. */
+	readonly newChat: boolean;
+	/** Where a new chat would run. Empty when this machine has no projects yet. */
+	readonly newCwd: string;
+	/** That directory's branch — null while it is being read, or if it is no repo. */
+	readonly newBranch: string | null;
 	readonly settingsOpen: boolean;
 	readonly settingsSection: SettingsSection;
 	readonly fileIdx: number;
@@ -55,10 +79,41 @@ export interface AppState {
 	 * draft id stays the handle for prompting it.
 	 */
 	readonly live: Readonly<Record<string, string>>;
+	/**
+	 * What each live pi will accept after a slash, keyed by that draft id.
+	 *
+	 * Keyed by the draft rather than the session because the commands arrive
+	 * before pi has recorded a session id, and the draft id is the one handle
+	 * that never changes underneath them.
+	 */
+	readonly commands: Readonly<Record<string, readonly PiCommand[]>>;
+	/**
+	 * The thinking levels each live pi's model supports, by draft id.
+	 *
+	 * Asked for once, so they describe the model pi started under. Empty for a
+	 * session read off disk, where the slider is a report and not a control.
+	 */
+	readonly levels: Readonly<Record<string, readonly ThinkingLevel[]>>;
+	/**
+	 * The skills on disk, and the mode each is in. Null until first read.
+	 *
+	 * Project skills are found relative to a directory, so this belongs to one
+	 * — it is not a property of the machine.
+	 */
+	readonly skills: SkillList | null;
+	readonly skillsCwd: string;
+	readonly skillsBusy: boolean;
+	/**
+	 * Every model pi is configured for. Null until asked, and asked at most once
+	 * a run: it costs a pi process, and the answer describes the machine.
+	 */
+	readonly models: readonly PiModel[] | null;
+	readonly modelsBusy: boolean;
 }
 
 let state: AppState = {
 	prefs: DEFAULT_PREFERENCES,
+	systemDark: prefersDark(),
 	projects: [],
 	summaries: {},
 	sessions: {},
@@ -73,12 +128,22 @@ let state: AppState = {
 	tab: "diff",
 	menu: null,
 	palette: false,
+	newChat: false,
+	newCwd: "",
+	newBranch: null,
 	settingsOpen: false,
 	settingsSection: "model",
 	fileIdx: 0,
 	openSteps: {},
 	openGroups: {},
 	live: {},
+	commands: {},
+	levels: {},
+	skills: null,
+	skillsCwd: "",
+	skillsBusy: false,
+	models: null,
+	modelsBusy: false,
 };
 
 const listeners = new Set<() => void>();
@@ -116,6 +181,16 @@ export function getState(): AppState {
 	return state;
 }
 
+/**
+ * The appearance actually painted.
+ *
+ * Everything that has to repaint on a theme change reads this rather than the
+ * preference: under `auto` the preference never changes, and the system does.
+ */
+export function appearance(s: AppState = state): Appearance {
+	return resolveTheme(s.prefs.theme, s.systemDark);
+}
+
 /** The open session, or null while the rail is still loading. */
 export function currentSession(s: AppState = state): Session | null {
 	return s.sessionId ? (s.sessions[s.sessionId] ?? null) : null;
@@ -140,6 +215,38 @@ export function sessionWorkflows(runs: readonly WorkflowRun[], sessionId: string
 export const NO_FILES: Session["files"] = [];
 export const NO_AGENTS: Session["agents"] = [];
 export const NO_STEPS: Session["steps"] = [];
+export const NO_COMMANDS: readonly PiCommand[] = [];
+export const NO_LEVELS: readonly ThinkingLevel[] = [];
+
+/**
+ * The directory the skills panel is about: whatever is open, or wherever a new
+ * chat would run. Project skills are relative to it.
+ */
+export function skillsFor(s: AppState = state): string {
+	return currentSession(s)?.cwd || s.newCwd || s.projects[0]?.id || "";
+}
+
+/**
+ * The levels the open session's pi will take.
+ *
+ * Empty for a session read off disk, and empty until pi has answered — in both
+ * cases the slider reports rather than sets.
+ */
+export function sessionLevels(s: AppState = state): readonly ThinkingLevel[] {
+	const draftId = s.sessionId ? s.live[s.sessionId] : null;
+	return (draftId ? s.levels[draftId] : null) ?? NO_LEVELS;
+}
+
+/**
+ * What the open session's pi will accept after a slash.
+ *
+ * Empty for a session read off disk: there is no pi to run a command, and
+ * offering one would be a button that does nothing.
+ */
+export function sessionCommands(s: AppState = state): readonly PiCommand[] {
+	const draftId = s.sessionId ? s.live[s.sessionId] : null;
+	return (draftId ? s.commands[draftId] : null) ?? NO_COMMANDS;
+}
 
 /* ── the seam a live pi will write through ─────────────────────────────── */
 
@@ -167,6 +274,12 @@ export function setSessionState(sessionId: string, patch: Partial<Session>): voi
 
 function setPrefs(patch: Partial<Preferences>): void {
 	set({ prefs: { ...state.prefs, ...patch } });
+}
+
+/** A settings panel that reads something outside the store asks for it on arrival. */
+function loadSection(section: SettingsSection): void {
+	if (section === "skills") void actions.loadSkills();
+	if (section === "model") void actions.loadModels();
 }
 
 export const actions = {
@@ -214,7 +327,7 @@ export const actions = {
 		// Step ids are only unique within a session, so disclosure state has to
 		// go with the session it belongs to. Clearing the error matters on the
 		// cached path too: the pane shows it in front of a loaded transcript.
-		set({ sessionId, palette: false, menu: null, fileIdx: 0, error: null, openSteps: {}, openGroups: {} });
+		set({ sessionId, palette: false, newChat: false, menu: null, fileIdx: 0, error: null, openSteps: {}, openGroups: {} });
 
 		if (state.sessions[sessionId]) {
 			actions.pickTabFor(sessionId);
@@ -237,9 +350,14 @@ export const actions = {
 		if (session) set({ tab: session.agents.length ? "agents" : "diff" });
 	},
 
-	toggleTheme(): void {
-		const theme: Theme = state.prefs.theme === "night" ? "day" : "night";
-		setPrefs({ theme });
+	/** auto → night → day → auto. `auto` is macOS's own appearance. */
+	cycleTheme(): void {
+		setPrefs({ theme: nextTheme(state.prefs.theme) });
+	},
+
+	/** macOS switched appearance. Only `auto` cares. */
+	receiveAppearance(systemDark: boolean): void {
+		if (systemDark !== state.systemDark) set({ systemDark });
 	},
 
 	toggleInspector(): void {
@@ -299,8 +417,147 @@ export const actions = {
 		set({ palette: false });
 	},
 
-	openSettings(): void {
-		set({ settingsOpen: true });
+	/**
+	 * Open the new-chat page.
+	 *
+	 * It opens on the directory you are already working in, because that is
+	 * almost always the answer; the chip and the folder button change it.
+	 */
+	async openNewChat(): Promise<void> {
+		const cwd = currentSession()?.cwd || state.projects[0]?.id || "";
+		set({ newChat: true, menu: null, palette: false, notice: null });
+		await actions.setNewCwd(cwd);
+	},
+
+	closeNewChat(): void {
+		set({ newChat: false, menu: null });
+	},
+
+	async setNewCwd(cwd: string): Promise<void> {
+		set({ newCwd: cwd, newBranch: null, menu: null });
+		if (!cwd) return;
+		const branch = await api.branchOf(cwd).catch(() => null);
+		// A slow answer for a directory the user has already moved off is stale.
+		if (state.newCwd === cwd) set({ newBranch: branch });
+	},
+
+	/** The native chooser, for a directory pi has never run in. */
+	async chooseNewCwd(): Promise<void> {
+		set({ menu: null });
+		try {
+			const cwd = await api.chooseDirectory();
+			if (cwd) await actions.setNewCwd(cwd);
+		} catch (error) {
+			set({ notice: errorMessage(error) });
+		}
+	},
+
+	/**
+	 * Start the chat, and send its first message.
+	 *
+	 * The page stays put if pi will not start: `newSession` puts the reason in
+	 * the notice and rolls back, and the typed message is worth keeping.
+	 */
+	async startNewChat(message: string): Promise<void> {
+		const cwd = state.newCwd;
+		if (!cwd) return;
+
+		const before = state.sessionId;
+		await actions.newSession(cwd);
+
+		const sessionId = state.sessionId;
+		if (!sessionId || sessionId === before || !state.live[sessionId]) return;
+
+		set({ newChat: false });
+		if (message) await actions.prompt(sessionId, message);
+	},
+
+	openSettings(settingsSection: SettingsSection = state.settingsSection): void {
+		set({ settingsOpen: true, settingsSection, menu: null });
+		loadSection(settingsSection);
+	},
+
+	/**
+	 * Ask pi what models it is configured for, once.
+	 *
+	 * A pi has to be started to answer, so the list is kept for the run. It
+	 * describes the machine's providers, which do not change while the app is
+	 * open — and a failure leaves the panel reporting what settings.json says.
+	 */
+	async loadModels(): Promise<void> {
+		if (state.modelsBusy || state.models) return;
+
+		set({ modelsBusy: true });
+		try {
+			const models = await api.models(skillsFor());
+			set({ models, modelsBusy: false });
+		} catch (error) {
+			set({ modelsBusy: false, notice: errorMessage(error) });
+		}
+	},
+
+	/**
+	 * Choose the model a new session starts on.
+	 *
+	 * Settings are read back rather than patched here, so the panel shows what
+	 * the file says and not what this app asked for.
+	 */
+	async setDefaultModel(provider: string, modelId: string): Promise<void> {
+		// Shut the list at once. The write is pi's file, not this window's, and
+		// waiting for it would leave the menu hanging open on a click.
+		set({ menu: null });
+		try {
+			await api.setDefaultModel(provider, modelId);
+			set({ settings: await api.settings() });
+		} catch (error) {
+			set({ notice: errorMessage(error) });
+		}
+	},
+
+	/**
+	 * How hard pi thinks in a session it has not started yet.
+	 *
+	 * Not the same setting as the composer's slider: that one moves a running
+	 * pi and dies with it. This one is a line in pi's settings file.
+	 */
+	async setDefaultThinkingLevel(level: ThinkingLevel): Promise<void> {
+		try {
+			await api.setDefaultThinkingLevel(level);
+			set({ settings: await api.settings() });
+		} catch (error) {
+			set({ notice: errorMessage(error) });
+		}
+	},
+
+	/** Read the skill directories, unless this directory is already read. */
+	async loadSkills(force = false): Promise<void> {
+		const cwd = skillsFor();
+		if (state.skillsBusy) return;
+		if (!force && state.skills && state.skillsCwd === cwd) return;
+
+		set({ skillsBusy: true, skillsCwd: cwd });
+		try {
+			const skills = await api.skills(cwd);
+			set({ skills, skillsBusy: false });
+		} catch (error) {
+			set({ skillsBusy: false, notice: errorMessage(error) });
+		}
+	},
+
+	/**
+	 * Change what a skill costs the prompt.
+	 *
+	 * This writes pi's own skill-loading preferences, so the list is read back
+	 * rather than patched here: the file takes globs, and the mode a skill ends
+	 * up in is that extension's answer, not this app's guess.
+	 */
+	async setSkillMode(name: string, mode: SkillMode): Promise<void> {
+		try {
+			await api.setSkillMode(name, mode, state.skillsCwd);
+			await actions.loadSkills(true);
+		} catch (error) {
+			set({ notice: errorMessage(error) });
+		}
 	},
 
 	closeSettings(): void {
@@ -309,6 +566,9 @@ export const actions = {
 
 	setSettingsSection(settingsSection: SettingsSection): void {
 		set({ settingsSection });
+		// Reached by the nav as well as by opening the sheet on a section, and a
+		// panel that never asked for its data draws an empty one.
+		loadSection(settingsSection);
 	},
 
 	selectWorkflow(workflowId: string): void {
@@ -373,6 +633,24 @@ export const actions = {
 		}
 	},
 
+	/**
+	 * Attach a pi to a session that was read off disk.
+	 *
+	 * pi keeps the session's id and appends to the same recording, so nothing
+	 * has to be moved: the row, the transcript and the id all stay put, and the
+	 * session simply becomes live.
+	 */
+	async resumeSession(sessionId: string): Promise<void> {
+		if (state.live[sessionId]) return;
+		const before = state.live;
+		set({ live: { ...state.live, [sessionId]: sessionId }, notice: null });
+		try {
+			await api.resumeAgent(sessionId);
+		} catch (error) {
+			set({ live: before, notice: errorMessage(error) });
+		}
+	},
+
 	/** Send the composer's text to the session's own pi. */
 	async prompt(sessionId: string, message: string): Promise<void> {
 		const draftId = state.live[sessionId];
@@ -395,14 +673,64 @@ export const actions = {
 		if (previous !== session.id) delete summaries[previous];
 		summaries[session.id] = { id: session.id, title: session.title, status: session.status, modified: session.modified };
 
+		// The draft's own key has to go with it. `keyOf` walks this map and
+		// returns the first key that names this pi, so a leftover draft key
+		// would answer for every later event and point at a session that has
+		// already been deleted.
+		const live = { ...state.live };
+		if (previous !== session.id) delete live[previous];
+		live[session.id] = draftId;
+
 		set({
 			sessions,
 			summaries,
 			// The rail row keeps its place in the project it was started in.
 			projects: state.projects.map((p) => ({ ...p, sessionIds: p.sessionIds.map((id) => (id === previous ? session.id : id)) })),
-			live: { ...state.live, [session.id]: draftId },
+			live,
 			sessionId: state.sessionId === previous ? session.id : state.sessionId,
 		});
+	},
+
+	/** What this pi loaded: its extensions, prompt templates and skills. */
+	receiveCommands(draftId: string, commands: readonly PiCommand[]): void {
+		set({ commands: { ...state.commands, [draftId]: commands } });
+	},
+
+	/**
+	 * Ask the session's pi to think harder, or less hard.
+	 *
+	 * The chip moves first so the slider follows the hand that drags it; pi's
+	 * own `thinking_level_changed` is the confirmation, and a refusal puts the
+	 * chip back where pi says it belongs.
+	 */
+	setThinkingLevel(sessionId: string, level: ThinkingLevel): void {
+		const draftId = state.live[sessionId];
+		if (!draftId) return;
+		setSessionState(sessionId, { thinkingLevel: level });
+		void api.setThinkingLevel(draftId, level).catch((error: unknown) => set({ notice: errorMessage(error) }));
+	},
+
+	/** Where the live pi's thinking level stands, and what its model allows. */
+	receiveThinking(draftId: string, level: ThinkingLevel | null, levels: readonly ThinkingLevel[]): void {
+		set({ levels: { ...state.levels, [draftId]: levels } });
+		const sessionId = keyOf(draftId);
+		if (sessionId && level) setSessionState(sessionId, { thinkingLevel: level });
+	},
+
+	/**
+	 * pi's process ended.
+	 *
+	 * The session goes back to being a recording, which is the truth and also
+	 * puts "Continue this session" back in front of the user. Leaving it live
+	 * would strand the composer on a pi that cannot be sent to — the login
+	 * shell exits well after the spawn that started it reported success.
+	 */
+	receiveExit(draftId: string): void {
+		const sessionId = keyOf(draftId);
+		if (!sessionId) return;
+		const live = { ...state.live };
+		delete live[sessionId];
+		set({ live });
 	},
 
 	/** pi started or stopped working, before its recording catches up. */

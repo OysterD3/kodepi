@@ -488,6 +488,43 @@ a:hover {
 	color: var(--fg-2);
 }
 
+/* Above the projects, and reading as one group with the search above it. */
+.rail__nav {
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	padding: 0 8px 4px;
+}
+.rail__item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 8px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	font-family: inherit;
+	cursor: pointer;
+	text-align: left;
+}
+.rail__item:hover {
+	background: var(--card-hi);
+}
+.rail__item--on {
+	background: var(--card-hi);
+}
+.rail__item-label {
+	font-size: 13px;
+	color: var(--fg-1);
+}
+.rail__item-count {
+	margin-left: auto;
+	font-family: var(--code);
+	font-size: 11px;
+	color: var(--fg-4);
+}
+
 .rail__head {
 	display: flex;
 	align-items: center;
@@ -1341,6 +1378,170 @@ a:hover {
 	flex: none;
 }
 
+/* ── the skills table ────────────────────────────────────────────────────── */
+
+.sktable {
+	border: 1px solid var(--line-1);
+	border-radius: 10px;
+	overflow: hidden;
+}
+.sktable__head,
+.sktable__row {
+	display: grid;
+	grid-template-columns: 190px minmax(0, 1fr) 66px 132px;
+	align-items: center;
+	gap: 14px;
+	padding: 7px 12px;
+}
+.sktable__head {
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--fg-4);
+	background: var(--card);
+	border-bottom: 1px solid var(--line-1);
+}
+.sktable__row + .sktable__row {
+	border-top: 1px solid var(--line-1);
+}
+.sktable__row:hover {
+	background: var(--card);
+}
+.sktable__name {
+	font-family: var(--code);
+	font-size: 12px;
+	color: var(--fg-0);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* One line, always: the mode column is what the eye runs down. */
+.sktable__desc {
+	font-size: 12px;
+	color: var(--fg-3);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+.sktable__scope {
+	font-size: 11px;
+	color: var(--fg-4);
+}
+.sktable__mode {
+	width: 100%;
+	border: 1px solid var(--line-2);
+	border-radius: 7px;
+	background: var(--card-hi);
+	padding: 4px 6px;
+	font-family: inherit;
+	font-size: 11.5px;
+	color: var(--fg-0);
+	cursor: pointer;
+}
+.sktable__mode:hover {
+	border-color: var(--line-3);
+}
+/* Nothing is set for this skill; it is following the default. */
+.sktable__mode--inherited {
+	color: var(--fg-2);
+	background: transparent;
+}
+.sktable__foot {
+	margin-top: 10px;
+	font-size: 11.5px;
+	line-height: 1.5;
+	color: var(--fg-4);
+}
+
+/* ── the new-chat page ───────────────────────────────────────────────────── */
+
+.newchat {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 30px 40px;
+	overflow-y: auto;
+}
+.newchat__middle {
+	width: 100%;
+	max-width: 880px;
+	display: flex;
+	flex-direction: column;
+}
+.newchat__hero {
+	margin: 0 0 20px;
+	font-size: 26px;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	color: var(--fg-0);
+	text-align: center;
+}
+.newchat__row {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin-bottom: 10px;
+	flex-wrap: wrap;
+}
+.newchat__where {
+	font-family: var(--code);
+	font-size: 11px;
+	color: var(--fg-4);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding-left: 4px;
+}
+.newchat__picks {
+	max-height: 260px;
+	overflow-y: auto;
+}
+.newchat__note {
+	margin: 12px 4px 0;
+	font-size: 11.5px;
+	line-height: 1.5;
+	color: var(--fg-4);
+}
+
+/* The row's chips are outlined, unlike the composer's borderless ones. */
+.chip--framed {
+	border: 1px solid var(--line-2);
+	background: var(--card);
+	height: 30px;
+	padding: 0 9px;
+}
+.chip--framed:hover {
+	background: var(--card-hi);
+}
+.chip--static,
+.chip--static:hover {
+	background: var(--card);
+	cursor: default;
+}
+.chip--off {
+	color: var(--fg-3);
+	cursor: not-allowed;
+}
+.chip--off input {
+	accent-color: var(--accent);
+	margin: 0;
+	cursor: not-allowed;
+}
+.chip--icon {
+	padding: 0 8px;
+}
+.chip__label--clip {
+	max-width: 190px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 /* ── composer ────────────────────────────────────────────────────────────── */
 
 .composer {
@@ -1364,7 +1565,42 @@ a:hover {
 .composer__notice:hover {
 	color: var(--fg-0);
 }
+/* The way back into a session that was only ever read. */
+.composer__resume {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	max-width: 880px;
+	margin: 0 auto 8px;
+	padding: 9px 13px;
+	border: 1px solid var(--line-2);
+	border-radius: 10px;
+	background: var(--card);
+	font-family: inherit;
+	text-align: left;
+	cursor: pointer;
+	width: 100%;
+}
+.composer__resume:hover {
+	background: var(--card-hi);
+	border-color: var(--line-3);
+}
+.composer__resume-text {
+	flex: none;
+	font-size: 12.5px;
+	font-weight: 500;
+	color: var(--accent-hi);
+}
+.composer__resume-sub {
+	font-size: 11.5px;
+	color: var(--fg-3);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .composer__box {
+	position: relative;
 	max-width: 880px;
 	margin: 0 auto;
 	border: 1px solid var(--line-2);
@@ -1393,6 +1629,89 @@ a:hover {
 	align-items: center;
 	gap: 2px;
 	padding: 4px 10px 9px;
+}
+
+/* ── the slash menu ──────────────────────────────────────────────────────── */
+
+.slash {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: calc(100% + 8px);
+	/* Under the chips' scrim, so an open chip menu still covers this one. */
+	z-index: 15;
+	background: var(--menu);
+	border: 1px solid var(--line-3);
+	border-radius: 14px;
+	box-shadow: 0 32px 70px -14px rgba(0, 0, 0, 0.8);
+	overflow: hidden;
+}
+.slash__body {
+	padding: 8px;
+	max-height: 320px;
+	overflow-y: auto;
+}
+.slash__group {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.09em;
+	color: var(--fg-4);
+	padding: 8px 10px 6px;
+}
+.slash__row {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	width: 100%;
+	min-width: 0;
+	padding: 6px 10px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	font-family: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.slash__row:hover,
+.slash__row--cursor {
+	background: var(--card-hi);
+}
+.slash__name {
+	flex: none;
+	max-width: 45%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-family: var(--code);
+	font-size: 12.5px;
+	color: var(--fg-0);
+}
+.slash__hit {
+	color: var(--accent-hi);
+	font-weight: 600;
+}
+/* A skill's description is a paragraph. One line of it is the honest amount. */
+.slash__desc {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12px;
+	color: var(--fg-3);
+}
+.slash__scope {
+	flex: none;
+	font-size: 11px;
+	color: var(--fg-4);
+}
+.slash__foot {
+	border-top: 1px solid var(--line-1);
+	padding: 9px 15px;
+	display: flex;
+	gap: 18px;
+	font-size: 11.5px;
+	color: var(--fg-4);
 }
 
 .chip {
@@ -1560,8 +1879,19 @@ a:hover {
 	height: 20px;
 	margin-left: -10px;
 	border-radius: 6px;
-	background: #b9b9b9;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+	/* macOS draws a slider knob white in both appearances. */
+	background: #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+/* Invisible, and on top: the drawn slider below it is what the user sees. */
+.effort__range {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	height: 26px;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
 }
 .effort__note {
 	margin-top: 12px;
@@ -2142,8 +2472,10 @@ a:hover {
 }
 
 .settings {
-	width: 760px;
-	max-height: 78%;
+	/* The skills table wants room for a description; the window's own minimum
+	   is 1120px, so this stays inside it. */
+	width: min(1040px, 92vw);
+	max-height: 82%;
 	background: var(--rail);
 	border: 1px solid var(--line-3);
 	border-radius: 14px;
@@ -2256,6 +2588,69 @@ a:hover {
 	border-radius: 9px;
 	border: 1px solid transparent;
 	cursor: default;
+}
+/* The model a new session starts on: what is set, and the list when it opens. */
+.modelpick {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.modelpick__now {
+	align-items: center;
+	border: 1px solid var(--line-2);
+	background: var(--card-hi);
+}
+.modelpick__caret {
+	margin-left: auto;
+	flex: none;
+	font-size: 10px;
+	color: var(--fg-3);
+}
+/* Opens in the flow, so the settings sheet scrolls it rather than clipping it. */
+.modelpick__list {
+	max-height: 320px;
+	overflow-y: auto;
+	border: 1px solid var(--line-1);
+	border-radius: 10px;
+	padding: 5px;
+}
+.modelpick__head {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 9px 10px 5px;
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--fg-4);
+}
+.modelpick__note {
+	padding: 9px 11px;
+	font-size: 12px;
+	color: var(--fg-3);
+}
+/* A settings row that is a control rather than a reading. */
+.setpick {
+	padding: 4px 11px 8px;
+}
+.modelrow {
+	align-items: center;
+}
+/* What is set reads as set by its tick and its ground, not by a colour. */
+.modelrow--on {
+	background: var(--card-hi);
+}
+.modelpick .menu__check {
+	color: var(--fg-2);
+}
+/* The marks with no colours of their own take the row's. */
+.brand {
+	flex: none;
+	color: var(--fg-2);
+}
+.brand--none {
+	display: inline-block;
 }
 .settings__notice {
 	color: var(--bad);

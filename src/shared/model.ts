@@ -328,6 +328,91 @@ export interface WorkflowPhase {
 	readonly agents: readonly Subagent[];
 }
 
+/* ── commands ──────────────────────────────────────────────────────────── */
+
+/**
+ * What can be typed after a slash, as pi's `get_commands` reports it.
+ *
+ * pi leaves its own TUI commands (`/settings`, `/hotkeys`) out of that list on
+ * purpose: they are handled by the terminal interface and would not run over
+ * RPC. So this list is everything a slash can name here, and nothing else.
+ */
+export type CommandSource = "extension" | "prompt" | "skill";
+
+export interface PiCommand {
+	/** No leading slash. A skill keeps pi's own `skill:` prefix — that is what runs. */
+	readonly name: string;
+	readonly description: string;
+	readonly source: CommandSource;
+	/** "user", "project" or "temporary". Empty when pi recorded none. */
+	readonly scope: string;
+}
+
+/* ── skills ────────────────────────────────────────────────────────────── */
+
+/**
+ * What a skill costs the prompt, and what it takes to reach it.
+ *
+ * The first three are the `skill-loading` extension's own, in the order they
+ * cost from most to least, and they live in its preferences file. "off" is not
+ * one of them and must never be written there — that extension drops a mode it
+ * does not know, and the skill falls back to being fully listed.
+ *
+ * "off" is pi core's, and a different file: an `!<name>` entry in the `skills`
+ * array of `settings.json` stops pi loading the skill at all, so it is in no
+ * prompt and has no `/skill:` command either.
+ */
+export const LOADING_MODES = ["preload", "name", "command"] as const;
+export type LoadingMode = (typeof LOADING_MODES)[number];
+
+export const SKILL_MODES = [...LOADING_MODES, "off"] as const;
+export type SkillMode = (typeof SKILL_MODES)[number];
+
+export function isLoadingMode(value: unknown): value is LoadingMode {
+	return typeof value === "string" && (LOADING_MODES as readonly string[]).includes(value);
+}
+
+export const SKILL_MODE_LABEL: Record<SkillMode, string> = {
+	preload: "Preloaded",
+	name: "On",
+	command: "When asked",
+	off: "Off",
+};
+
+export const SKILL_MODE_HELP: Record<SkillMode, string> = {
+	preload: "Listed, and its whole body is already in the prompt. Costs the most, saves a round trip.",
+	name: "Listed for the model to find and read. pi's own default.",
+	command: "Hidden from the prompt and costs nothing. You can still run it yourself with /skill:<name>.",
+	off: "Not loaded at all: no prompt entry, and no /skill: command either.",
+};
+
+export function isSkillMode(value: unknown): value is SkillMode {
+	return typeof value === "string" && (SKILL_MODES as readonly string[]).includes(value);
+}
+
+export interface Skill {
+	/** As pi names it — no `skill:` prefix, which is the command's, not the skill's. */
+	readonly name: string;
+	readonly description: string;
+	/** The SKILL.md it was read from. */
+	readonly path: string;
+	/** "user" or "project". */
+	readonly scope: string;
+	readonly mode: SkillMode;
+	/** True when no rule names this skill and it fell back to the default. */
+	readonly inherited: boolean;
+}
+
+export interface SkillList {
+	readonly skills: readonly Skill[];
+	/** The mode for anything no rule matches. */
+	readonly fallback: SkillMode;
+	/** False when the whole skill-loading extension is switched off. */
+	readonly enabled: boolean;
+	/** Where the modes are kept, so the panel can say. */
+	readonly store: string;
+}
+
 /* ── settings and preferences ──────────────────────────────────────────── */
 
 /** pi's own seven levels. The design drew six. */
@@ -336,6 +421,29 @@ export type ThinkingLevel = (typeof THINKING_LEVELS)[number];
 
 export function isThinkingLevel(value: string): value is ThinkingLevel {
 	return (THINKING_LEVELS as readonly string[]).includes(value);
+}
+
+/**
+ * One model pi is configured for.
+ *
+ * A model is named by its provider *and* its id: two providers can offer the
+ * same id — this machine has `deepseek-v4-flash` under both `deepseek` and
+ * `opencode-go` — so the id alone does not say who bills for it.
+ */
+export interface PiModel {
+	readonly id: string;
+	/** The provider's display name for it, or the id when it gives none. */
+	readonly name: string;
+	readonly provider: string;
+	/** Whether the model has thinking levels beyond "off". */
+	readonly reasoning: boolean;
+	/** Null when the model states no context window. */
+	readonly contextWindow: number | null;
+}
+
+/** `provider/id` — how pi's own `--model` flag and settings name a model. */
+export function modelRef(provider: string, id: string): string {
+	return provider && id ? `${provider}/${id}` : "";
 }
 
 export interface PiSettings {
@@ -354,7 +462,8 @@ export interface PiSettings {
 	readonly piVersion: string | null;
 }
 
-export type Theme = "night" | "day";
+/** `auto` is macOS's own appearance; the other two override it. */
+export type Theme = "night" | "day" | "auto";
 
 export type InspectorTab = "diff" | "agents" | "term" | "flow";
 
@@ -369,7 +478,7 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
-	theme: "night",
+	theme: "auto",
 	inspectorOpen: true,
 	inspectorWide: false,
 	mergeToolCalls: true,

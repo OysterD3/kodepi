@@ -7,7 +7,7 @@
  */
 
 import { join } from "node:path";
-import { BrowserWindow, app, session, shell } from "electron";
+import { BrowserWindow, app, nativeTheme, session, shell } from "electron";
 import { registerIpc } from "./ipc";
 import { killAgents } from "./services/agent";
 import { killShells } from "./services/terminal";
@@ -43,7 +43,9 @@ function createWindow(): void {
 	const win = new BrowserWindow({
 		...WINDOW,
 		show: false,
-		backgroundColor: "#1c1c1c",
+		// What is painted before the renderer has drawn anything, so it must be
+		// the surface the renderer is about to paint: `--surface`, either way.
+		backgroundColor: nativeTheme.shouldUseDarkColors ? "#2c2c2e" : "#ffffff",
 		titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
 		trafficLightPosition: { x: 16, y: 20 },
 		webPreferences: {

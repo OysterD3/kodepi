@@ -2,11 +2,13 @@ import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { retintShells, shellView } from "@/lib/shells";
-import { currentSession, useStore } from "@/lib/store";
+import { appearance, currentSession, useStore } from "@/lib/store";
 
 export function TerminalTab(): JSX.Element {
 	const session = useStore(currentSession);
-	const theme = useStore((s) => s.prefs.theme);
+	// The painted appearance, not the preference: under `auto` the preference
+	// stays put while macOS changes underneath it.
+	const theme = useStore(appearance);
 	const host = useRef<HTMLDivElement>(null);
 
 	const sessionId = session?.id ?? "";

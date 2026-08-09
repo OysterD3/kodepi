@@ -1,8 +1,18 @@
 import type { JSX } from "react";
+import type { Theme } from "@shared/model";
 import { LinesIcon, PanelIcon } from "./icons";
 import { Menu } from "./primitives";
 import { basename, formatDuration } from "@/lib/format";
 import { actions, currentSession, useStore } from "@/lib/store";
+
+/** The button cycles the three, and says which one it is on. */
+const THEME_GLYPH: Record<Theme, string> = { auto: "◐", night: "☾", day: "☀" };
+
+const THEME_TITLE: Record<Theme, string> = {
+	auto: "Appearance: following macOS",
+	night: "Appearance: always dark",
+	day: "Appearance: always light",
+};
 
 function ViewMenu(): JSX.Element {
 	const merge = useStore((s) => s.prefs.mergeToolCalls);
@@ -94,8 +104,8 @@ export function Titlebar(): JSX.Element {
 					{viewMenu ? <ViewMenu /> : null}
 				</div>
 
-				<button type="button" className="icon-btn" title="Toggle theme" onClick={actions.toggleTheme}>
-					{theme === "night" ? "☾" : "☀"}
+				<button type="button" className="icon-btn" title={THEME_TITLE[theme]} onClick={actions.cycleTheme}>
+					{THEME_GLYPH[theme]}
 				</button>
 			</div>
 		</div>

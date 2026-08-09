@@ -1,24 +1,26 @@
 /**
  * One handler per channel.
  *
- * Everything here is read-only against pi's agent directory. The scan records
- * which file each session lives in, so opening one does not walk the directory
- * again.
+ * Reading is the bulk of it: the scan records which file each session lives in,
+ * so opening one does not walk the directory again. The two handlers that write
+ * — a skill's mode and the default model — touch named keys in pi's own
+ * settings and keep everything else in the file.
  */
 
 import { readFile } from "node:fs/promises";
-import { type WebContents, ipcMain, shell } from "electron";
+import { BrowserWindow, type OpenDialogOptions, type WebContents, dialog, ipcMain, shell } from "electron";
 import type { IpcResult, ScanResult } from "@shared/ipc";
 import { CHANNELS } from "@shared/ipc";
-import type { Session, SessionSummary } from "@shared/model";
+import type { Session, SessionSummary, SkillMode, ThinkingLevel } from "@shared/model";
 import { errorMessage } from "@shared/model";
 import { parseEntries } from "./pi/entries";
 import { reduceSession } from "./pi/transcript";
-import { abortAgent, promptAgent, startAgent } from "./services/agent";
+import { abortAgent, listModels, promptAgent, setThinkingLevel, startAgent } from "./services/agent";
 import { agentDir } from "./services/agent-dir";
 import { currentBranch } from "./services/git";
 import { type ScannedSession, scanSessions } from "./services/sessions";
-import { contextWindows, readSettings } from "./services/settings";
+import { contextWindows, readSettings, setDefaultModel, setDefaultThinkingLevel } from "./services/settings";
+import { readSkills, setSkillMode } from "./services/skills";
 import { resizeShell, startShell, writeShell } from "./services/terminal";
 import { readWorkflowRuns } from "./services/workflows";
 
@@ -101,6 +103,24 @@ export function registerIpc(): void {
 		shell.showItemInFolder(agentDir());
 	});
 
+	register(CHANNELS.skills, (cwd: string) => readSkills(cwd));
+	register(CHANNELS.setSkillMode, (name: string, mode: SkillMode, cwd: string) => setSkillMode(name, mode, cwd));
+
+	register(CHANNELS.models, (cwd: string) => listModels(cwd));
+	register(CHANNELS.setDefaultModel, (provider: string, modelId: string) => setDefaultModel(provider, modelId));
+	register(CHANNELS.setDefaultThinking, (level: ThinkingLevel) => setDefaultThinkingLevel(level));
+
+	// Where a new chat should run. The chooser is the only way to name a
+	// directory pi has never run in — the rail only knows the ones it has.
+	register(CHANNELS.chooseDirectory, async (): Promise<string | null> => {
+		const options: OpenDialogOptions = { title: "Choose a directory for the new chat", properties: ["openDirectory", "createDirectory"] };
+		const parent = BrowserWindow.getFocusedWindow();
+		const result = parent ? await dialog.showOpenDialog(parent, options) : await dialog.showOpenDialog(options);
+		return result.canceled ? null : (result.filePaths[0] ?? null);
+	});
+
+	register(CHANNELS.branchOf, (cwd: string) => currentBranch(cwd));
+
 	// The shell writes back to whichever window asked for it.
 	registerFromWindow(CHANNELS.termStart, (sender, sessionId: string, cwd: string, cols: number, rows: number) =>
 		startShell(sender, sessionId, cwd, cols, rows),
@@ -109,6 +129,15 @@ export function registerIpc(): void {
 	registerFromWindow(CHANNELS.termResize, (_sender, sessionId: string, cols: number, rows: number) => resizeShell(sessionId, cols, rows));
 
 	registerFromWindow(CHANNELS.agentStart, (sender, draftId: string, cwd: string) => startAgent(sender, draftId, cwd));
+
+	// The renderer knows a session by its id; where it is recorded is the scan's
+	// business, and it is the scan that has the path.
+	registerFromWindow(CHANNELS.agentResume, (sender, sessionId: string) => {
+		const scanned = files.get(sessionId);
+		if (!scanned) throw new Error(`unknown session: ${sessionId}`);
+		startAgent(sender, sessionId, scanned.cwd, scanned.file);
+	});
 	registerFromWindow(CHANNELS.agentPrompt, (_sender, draftId: string, message: string) => promptAgent(draftId, message));
 	registerFromWindow(CHANNELS.agentAbort, (_sender, draftId: string) => abortAgent(draftId));
+	registerFromWindow(CHANNELS.agentSetThinking, (_sender, draftId: string, level: ThinkingLevel) => setThinkingLevel(draftId, level));
 }
