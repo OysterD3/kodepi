@@ -298,7 +298,7 @@ export async function setSkillMode(name: string, mode: SkillMode, cwd = ""): Pro
 	// and back on lands in the mode it had rather than somewhere unrelated.
 	await setExcluded(name, mode === "off", cwd);
 	// The extension drops a mode it does not recognise, and the skill then falls
-	// back to the default — fully listed. "off" is not one of its three, so it
+	// back to the default — fully listed. "off" is not one of its four, so it
 	// never gets as far as that file.
 	if (isLoadingMode(mode)) await setLoadingMode(name, mode);
 }

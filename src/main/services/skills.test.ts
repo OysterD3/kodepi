@@ -4,13 +4,13 @@ import { LOADING_MODES, SKILL_MODES, SKILL_MODE_LABEL } from "@shared/model";
 import { excludedBy, frontmatter, modeFor, setSkillMode } from "./skills";
 
 describe("the modes offered", () => {
-	// Three belong to the extension's preferences file; "off" is pi core's
+	// Four belong to the extension's preferences file; "off" is pi core's
 	// exclusion and lives in settings.json. Writing "off" into the extension's
 	// file is the one thing that must never happen: it drops a mode it does not
 	// know, and the skill falls back to fully listed — the opposite of off.
-	it("keeps pi core's off apart from the extension's three", () => {
-		expect([...LOADING_MODES]).toEqual(["preload", "name", "command"]);
-		expect([...SKILL_MODES]).toEqual(["preload", "name", "command", "off"]);
+	it("keeps pi core's off apart from the extension's four", () => {
+		expect([...LOADING_MODES]).toEqual(["preload", "name", "brief", "command"]);
+		expect([...SKILL_MODES]).toEqual(["preload", "name", "brief", "command", "off"]);
 		expect(SKILL_MODE_LABEL.off).toBe("Off");
 		expect(SKILL_MODE_LABEL.name).toBe("On");
 	});

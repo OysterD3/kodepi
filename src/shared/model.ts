@@ -353,7 +353,7 @@ export interface PiCommand {
 /**
  * What a skill costs the prompt, and what it takes to reach it.
  *
- * The first three are the `skill-loading` extension's own, in the order they
+ * The first four are the `skill-loading` extension's own, in the order they
  * cost from most to least, and they live in its preferences file. "off" is not
  * one of them and must never be written there — that extension drops a mode it
  * does not know, and the skill falls back to being fully listed.
@@ -362,7 +362,7 @@ export interface PiCommand {
  * array of `settings.json` stops pi loading the skill at all, so it is in no
  * prompt and has no `/skill:` command either.
  */
-export const LOADING_MODES = ["preload", "name", "command"] as const;
+export const LOADING_MODES = ["preload", "name", "brief", "command"] as const;
 export type LoadingMode = (typeof LOADING_MODES)[number];
 
 export const SKILL_MODES = [...LOADING_MODES, "off"] as const;
@@ -375,13 +375,15 @@ export function isLoadingMode(value: unknown): value is LoadingMode {
 export const SKILL_MODE_LABEL: Record<SkillMode, string> = {
 	preload: "Preloaded",
 	name: "On",
+	brief: "Name only",
 	command: "When asked",
 	off: "Off",
 };
 
 export const SKILL_MODE_HELP: Record<SkillMode, string> = {
 	preload: "Listed, and its whole body is already in the prompt. Costs the most, saves a round trip.",
-	name: "Listed for the model to find and read. pi's own default.",
+	name: "Name, description and path. pi's own default, and what a skill costs unless you say otherwise.",
+	brief: "Name and path, without the description — most of what an entry costs. For a skill whose name says enough.",
 	command: "Hidden from the prompt and costs nothing. You can still run it yourself with /skill:<name>.",
 	off: "Not loaded at all: no prompt entry, and no /skill: command either.",
 };
