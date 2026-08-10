@@ -19,7 +19,7 @@ import { abortAgent, listModels, promptAgent, setThinkingLevel, startAgent } fro
 import { agentDir } from "./services/agent-dir";
 import { currentBranch } from "./services/git";
 import { type ScannedSession, scanSessions } from "./services/sessions";
-import { contextWindows, readSettings, setDefaultModel, setDefaultThinkingLevel } from "./services/settings";
+import { contextWindows, readSettings, setActiveProfile, setAdvisorModel, setDefaultModel, setDefaultThinkingLevel, setRoleModel } from "./services/settings";
 import { readSkills, setSkillMode } from "./services/skills";
 import { resizeShell, startShell, writeShell } from "./services/terminal";
 import { readWorkflowRuns } from "./services/workflows";
@@ -109,6 +109,9 @@ export function registerIpc(): void {
 	register(CHANNELS.models, (cwd: string) => listModels(cwd));
 	register(CHANNELS.setDefaultModel, (provider: string, modelId: string) => setDefaultModel(provider, modelId));
 	register(CHANNELS.setDefaultThinking, (level: ThinkingLevel) => setDefaultThinkingLevel(level));
+	register(CHANNELS.setAdvisorModel, (model: string) => setAdvisorModel(model));
+	register(CHANNELS.setActiveProfile, (name: string) => setActiveProfile(name));
+	register(CHANNELS.setRoleModel, (profile: string, role: string, ref: string) => setRoleModel(profile, role, ref));
 
 	// Where a new chat should run. The chooser is the only way to name a
 	// directory pi has never run in — the rail only knows the ones it has.

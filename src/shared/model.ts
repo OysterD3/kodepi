@@ -446,6 +446,53 @@ export function modelRef(provider: string, id: string): string {
 	return provider && id ? `${provider}/${id}` : "";
 }
 
+/**
+ * A model named by the job it does rather than by who serves it.
+ *
+ * `models.providers.<profile>` in pi's settings maps names of the user's own
+ * choosing — `session`, `frontier`, `fast`, `cheap` — onto real references, and
+ * `/provider` moves the whole profile at once. Settings that name a role follow
+ * that switch; settings that name a model stay behind on the old provider.
+ */
+export interface ModelRole {
+	readonly name: string;
+	/** What the profile maps it to: `provider/id`, and maybe `:level`. */
+	readonly ref: string;
+}
+
+/** One combination: a model for every job, under a name of the user's choosing. */
+export interface ModelProfile {
+	readonly name: string;
+	readonly roles: readonly ModelRole[];
+}
+
+/**
+ * A model reference back into its parts.
+ *
+ * The provider is what stands before the *first* slash, because an id may hold
+ * slashes of its own — OpenRouter's are `deepseek/deepseek-chat`. The trailing
+ * `:level` is only a level when pi has one by that name, which is what leaves
+ * an id like `deepseek-chat:free` alone.
+ */
+export function parseRef(ref: string): { provider: string; id: string; level: ThinkingLevel | null } {
+	const slash = ref.indexOf("/");
+	if (slash < 1) return { provider: "", id: "", level: null };
+
+	const provider = ref.slice(0, slash);
+	const rest = ref.slice(slash + 1);
+	const colon = rest.lastIndexOf(":");
+	const tail = colon > 0 ? rest.slice(colon + 1) : "";
+
+	return isThinkingLevel(tail)
+		? { provider, id: rest.slice(0, colon), level: tail }
+		: { provider, id: rest, level: null };
+}
+
+/** The roles of the profile in force, or none when no profile is. */
+export function activeRoles(settings: Pick<PiSettings, "modelProfile" | "modelProfiles"> | null): readonly ModelRole[] {
+	return settings?.modelProfiles.find((profile) => profile.name === settings.modelProfile)?.roles ?? [];
+}
+
 export interface PiSettings {
 	readonly defaultProvider: string;
 	readonly defaultModel: string;
@@ -457,6 +504,10 @@ export interface PiSettings {
 	readonly askRules: number;
 	/** settings.advisor.model, or null when the advisor is not configured. */
 	readonly advisorModel: string | null;
+	/** Which profile of `models.providers` is in force. Empty when none is. */
+	readonly modelProfile: string;
+	/** Every profile the file defines, in the order it lists them. */
+	readonly modelProfiles: readonly ModelProfile[];
 	readonly agentDir: string;
 	/** pi's version, or null when its CLI was not found. */
 	readonly piVersion: string | null;

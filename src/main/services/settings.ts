@@ -11,8 +11,8 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { PiSettings, ThinkingLevel } from "@shared/model";
-import { isThinkingLevel } from "@shared/model";
+import type { ModelProfile, ModelRole, PiSettings, ThinkingLevel } from "@shared/model";
+import { isThinkingLevel, parseRef } from "@shared/model";
 import { stringArg } from "../pi/entries";
 import { agentDir, settingsPath } from "./agent-dir";
 
@@ -162,10 +162,69 @@ async function findPiVersion(): Promise<string | null> {
 	return versionFromStore();
 }
 
+/**
+ * The same answer for the life of the app.
+ *
+ * Every settings write is followed by a read of the whole file, and the hunt
+ * above walks pnpm's global store — a directory tree — to answer a question
+ * whose answer cannot change while this process is running.
+ */
+let piVersion: Promise<string | null> | null = null;
+
+function readPiVersion(): Promise<string | null> {
+	piVersion ??= findPiVersion();
+	return piVersion;
+}
+
+/**
+ * The `models` block and its profiles, read the same way everywhere.
+ *
+ * The reader and the two writers have to agree on what a malformed block means,
+ * or the panel offers a combination the write then refuses.
+ */
+function modelsBlock(settings: Record<string, unknown>): { models: Record<string, unknown>; providers: Record<string, unknown> } {
+	const models = (settings["models"] as Record<string, unknown> | undefined) ?? {};
+	return { models, providers: (models["providers"] as Record<string, unknown> | undefined) ?? {} };
+}
+
+/** One profile, or null when the file has none by that name. */
+function profileOf(providers: Record<string, unknown>, name: string): Record<string, unknown> | null {
+	const profile = providers[name];
+	return typeof profile === "object" && profile !== null ? (profile as Record<string, unknown>) : null;
+}
+
+/**
+ * The combinations the file defines, and which of them is in force.
+ *
+ * `models` is not pi's own block — the `/provider` extension keeps it — so
+ * every part of it may be missing, and a missing part means no combinations
+ * rather than an error. Values that are not strings are dropped: a role is a
+ * model reference, and half of one would resolve to nothing.
+ */
+function readProfiles(settings: Record<string, unknown>): { active: string; profiles: ModelProfile[] } {
+	const { models, providers } = modelsBlock(settings);
+
+	const profiles: ModelProfile[] = [];
+	for (const [name, block] of Object.entries(providers)) {
+		if (typeof block !== "object" || block === null) continue;
+		const roles: ModelRole[] = [];
+		for (const [role, ref] of Object.entries(block as Record<string, unknown>)) {
+			if (typeof ref === "string" && ref) roles.push({ name: role, ref });
+		}
+		profiles.push({ name, roles });
+	}
+
+	// An `active` naming a profile nobody defined is not one in force: pi would
+	// read every role as a literal model, which is what having none means here.
+	const active = stringArg(models, "active");
+	return { active: profiles.some((profile) => profile.name === active) ? active : "", profiles };
+}
+
 export async function readSettings(): Promise<PiSettings> {
 	const settings = (await readJson(settingsPath())) ?? {};
 	const permissions = (settings["permissions"] as Record<string, unknown> | undefined) ?? {};
 	const advisor = (settings["advisor"] as Record<string, unknown> | undefined) ?? {};
+	const { active, profiles } = readProfiles(settings);
 
 	const level = settings["defaultThinkingLevel"];
 	const thinking: ThinkingLevel = typeof level === "string" && isThinkingLevel(level) ? level : "medium";
@@ -179,8 +238,10 @@ export async function readSettings(): Promise<PiSettings> {
 		denyRules: countList(permissions["deny"]),
 		askRules: countList(permissions["ask"]),
 		advisorModel: stringArg(advisor, "model") || null,
+		modelProfile: active,
+		modelProfiles: profiles,
 		agentDir: agentDir(),
-		piVersion: await findPiVersion(),
+		piVersion: await readPiVersion(),
 	};
 }
 
@@ -220,6 +281,106 @@ export async function setDefaultThinkingLevel(level: ThinkingLevel): Promise<voi
 	if (settings["defaultThinkingLevel"] === level) return;
 
 	await writeJson(path, { ...settings, defaultThinkingLevel: level });
+}
+
+/**
+ * pi's own two keys, moved to whatever the `session` role names.
+ *
+ * This is the half of `/provider` that outlives the process. pi resolves
+ * `defaultProvider` and `defaultModel` before any extension runs, so they
+ * cannot be roles themselves and have to be written out.
+ *
+ * A reference this cannot read is refused rather than skipped: writing the rest
+ * would leave the file saying a combination is in force while pi went on
+ * starting every chat on the model the last one named.
+ *
+ * `withLevel` is for the switch, which is a whole set moving at once and the one
+ * place a profile's `:level` pin may take the thinking level with it. Editing a
+ * single role must not: the level is its own setting, with its own control.
+ */
+function withSession(settings: Record<string, unknown>, ref: string, withLevel: boolean): Record<string, unknown> {
+	const { provider, id, level } = parseRef(ref);
+	if (!provider || !id) throw new Error(`"${ref}" is not a model reference, so pi's own default model cannot be moved to it`);
+
+	return { ...settings, defaultProvider: provider, defaultModel: id, ...(withLevel && level ? { defaultThinkingLevel: level } : {}) };
+}
+
+/**
+ * Which combination is in force.
+ *
+ * What `/provider <name>` writes: the active profile, and pi's own two keys
+ * from that profile's `session` role. A profile that defines no `session` moves
+ * nothing else — `session` is the only reserved role, and nothing makes a
+ * profile carry one.
+ *
+ * The running pi is not moved. It holds its model in memory, and this app has
+ * no way to hand it another; the panel that calls this says so.
+ */
+export async function setActiveProfile(name: string): Promise<void> {
+	if (!name.trim()) throw new Error("a combination is named before it can be used");
+
+	const path = settingsPath();
+	const settings = await readForUpdate(path);
+	const { models, providers } = modelsBlock(settings);
+	const profile = profileOf(providers, name);
+	if (!profile) throw new Error(`pi's settings define no "${name}" combination`);
+
+	const session = profile["session"];
+	const next = { ...settings, models: { ...models, active: name } };
+
+	await writeJson(path, typeof session === "string" ? withSession(next, session, true) : next);
+}
+
+/**
+ * One model in one combination.
+ *
+ * Writing the `session` role of the combination in force moves pi's own two
+ * keys with it, for the same reason switching a combination does: they are the
+ * same setting said twice, and letting them drift would leave the file
+ * disagreeing with itself until the next `/provider`.
+ *
+ * The thinking level is not one of those keys here. It has a control of its own
+ * in the same panel, and choosing a model is not asking to undo it.
+ */
+export async function setRoleModel(profileName: string, role: string, ref: string): Promise<void> {
+	if (!profileName.trim() || !role.trim() || !ref.trim()) throw new Error("a role is a combination, a name and a model");
+
+	const path = settingsPath();
+	const settings = await readForUpdate(path);
+	const { models, providers } = modelsBlock(settings);
+	// The panel only offers combinations that are in the file, so an absent one
+	// means it changed underneath this window. Writing would invent a profile.
+	const profile = profileOf(providers, profileName);
+	if (!profile) throw new Error(`pi's settings define no "${profileName}" combination`);
+
+	const next = {
+		...settings,
+		models: { ...models, providers: { ...providers, [profileName]: { ...profile, [role]: ref } } },
+	};
+
+	await writeJson(path, role === "session" && models["active"] === profileName ? withSession(next, ref, false) : next);
+}
+
+/**
+ * Which model the advisor extension consults.
+ *
+ * `advisor.model` is a whole key of its own rather than one of pi's top-level
+ * ones, so what is already inside it is kept — `enabled` is the extension's
+ * kill switch, and dropping it here would silently switch the advisor back on.
+ *
+ * The value is not checked against the roles: pi resolves it with its own
+ * `--model` rules, so a plain `provider/id` is as legal as a role name, and a
+ * role this profile does not define is read as a literal reference.
+ */
+export async function setAdvisorModel(model: string): Promise<void> {
+	if (!model.trim()) throw new Error("the advisor needs a model to consult");
+
+	const path = settingsPath();
+	const settings = await readForUpdate(path);
+	const advisor = (settings["advisor"] as Record<string, unknown> | undefined) ?? {};
+	if (advisor["model"] === model) return;
+
+	await writeJson(path, { ...settings, advisor: { ...advisor, model } });
 }
 
 /**

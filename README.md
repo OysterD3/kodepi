@@ -121,7 +121,8 @@ never a shell, with `GIT_DIR` / `GIT_WORK_TREE` / `GIT_INDEX_FILE` scrubbed.
 | Two footer meters with bars | Context, with a bar; session cost, without one | pi records a context window per model, so that fraction is real. Nothing in the agent directory states a spend limit, so cost gets a figure and no bar. |
 | "Session usage" / "Weekly limit" | Removed | pi never reads provider rate-limit headers. There is no source. |
 | "Response style" (concise / normal / detailed) | Removed | pi has no verbosity control anywhere in its settings. |
-| "Advisor model" as a setting | Reported, not set | It is real — `settings.advisor.model` — but writing it needs a live pi. |
+| "Advisor model" as a setting | A role, chosen from the ones pi has | It is real — `settings.advisor.model` — and takes a *role* name, so the panel offers the roles the active `models` profile defines rather than a model. A model there would be left behind by the next `/provider` switch. |
+| A model picker per setting | One panel of combinations | The `models` block names a model for every job — session, frontier, fast, cheap — and every setting that resolves one names a *role*. So the Combinations panel edits those, and the Model panel reports pi's `defaultProvider`/`defaultModel` rather than writing them: they are the `session` role said twice, and two controls on one setting would take turns undoing each other. A configuration whose combination in force names no `session` role — including one with no `models` block at all — gets the direct picker back, because then nothing else writes them. |
 | Permissions menu ("Read only", "Auto Mode") | pi's own mode and rule counts | pi's modes are its own, and its documentation says trust is *not* a sandbox. The menu says so. |
 | Six effort levels | Seven | pi has `off, minimal, low, medium, high, xhigh, max`. |
 | "A fresh worktree is cut from `main`" | The session's real cwd and branch | pi cuts no worktrees. |

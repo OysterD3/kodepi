@@ -14,7 +14,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PiApi } from "@shared/ipc";
 import type { PiCommand, PiModel, PiSettings, Project, Session, SessionSummary, ThinkingLevel, WorkflowRun } from "@shared/model";
-import { THINKING_LEVELS } from "@shared/model";
+import { THINKING_LEVELS, activeRoles } from "@shared/model";
 
 const project: Project = { id: "/code/checkout-web", name: "checkout-web", sessionIds: ["s1", "s2"] };
 
@@ -74,6 +74,18 @@ const settings: PiSettings = {
 	denyRules: 13,
 	askRules: 0,
 	advisorModel: "frontier",
+	modelProfile: "openai",
+	modelProfiles: [
+		{
+			name: "openai",
+			roles: [
+				{ name: "session", ref: "openai-codex/gpt-5.6-sol:max" },
+				{ name: "frontier", ref: "openai-codex/gpt-5.6-sol" },
+				{ name: "cheap", ref: "openai-codex/gpt-5.6-luna" },
+			],
+		},
+		{ name: "anthropic", roles: [{ name: "session", ref: "anthropic/claude-opus-5" }] },
+	],
 	agentDir: "/home/me/.pi/agent",
 	piVersion: "0.84.1",
 };
@@ -103,6 +115,9 @@ const stub: PiApi = {
 	models: async () => models,
 	setDefaultModel: async () => undefined,
 	setDefaultThinkingLevel: async () => undefined,
+	setAdvisorModel: async () => undefined,
+	setActiveProfile: async () => undefined,
+	setRoleModel: async () => undefined,
 	// No native dialog under the test bridge; the directory is set directly.
 	chooseDirectory: async () => null,
 	branchOf: async () => "main",
@@ -457,13 +472,13 @@ describe("App", () => {
 	it("offers pi's models, named by provider and id together", async () => {
 		// The nav reaches this panel too, not only opening the sheet on it.
 		actions.openSettings("about");
-		actions.setSettingsSection("model");
+		actions.setSettingsSection("combos");
 		await actions.loadModels();
 
 		// Shut, it reports what is set and lists nothing.
 		expect(render()).not.toContain("Claude Opus 5");
 
-		actions.toggleMenu("defmodel");
+		actions.toggleMenu("role:openai:frontier");
 		const html = render();
 		// Each row says the literal string settings.json holds, so the panel and
 		// the file can never look like they disagree.
@@ -505,6 +520,139 @@ describe("App", () => {
 		actions.closeMenus();
 	});
 
+	it("configures the combinations, and says which one is in force", async () => {
+		actions.openSettings("combos");
+		const html = render();
+
+		// Every combination the file defines, and which pi is actually on.
+		expect(html).toContain(">openai<");
+		expect(html).toContain(">anthropic<");
+		expect(html.match(/combo__live/g)?.length).toBe(1);
+		// One row per job, each naming the model it runs on — the whole
+		// reference, level and all, because that is the line in the file.
+		for (const role of activeRoles(settings)) expect(html).toContain(`>${role.name}</span>`);
+		expect(html).toContain("openai-codex/gpt-5.6-sol:max");
+		// The one in force is used, not offered for use.
+		expect(html).not.toContain("Use openai");
+
+		actions.closeSettings();
+	});
+
+	it("offers to use a combination that is not in force, and never switches by itself", async () => {
+		// A file with combinations but none active: pi reads every role as a
+		// literal model until one is chosen, so the panel offers rather than picks.
+		useBridge({
+			settings: async () => ({ ...settings, modelProfile: "" }),
+			setActiveProfile: () => {
+				throw new Error("switched without being asked");
+			},
+		});
+		await actions.load();
+
+		actions.openSettings("combos");
+		const html = render();
+		expect(html).toContain("Use openai");
+		expect(html).not.toContain("combo__live");
+		expect(getState().notice).toBeNull();
+
+		actions.closeSettings();
+		useBridge({});
+		await actions.load();
+	});
+
+	it("sends the default model to the combinations when one is in force", async () => {
+		actions.openSettings("model");
+		// Two controls writing pi's one default model would undo each other, so
+		// the panel that does not own it points at the one that does.
+		expect(render()).toContain("the session role of openai");
+
+		useBridge({ settings: async () => ({ ...settings, modelProfile: "", modelProfiles: [] }) });
+		await actions.load();
+		actions.openSettings("model");
+		await actions.loadModels();
+		actions.toggleMenu("defmodel");
+		// With no combination there is nothing else to write it, so the picker
+		// is the only way to set pi's own model and it comes back.
+		expect(render()).toContain('data-model="anthropic/claude-opus-5"');
+
+		actions.closeMenus();
+		actions.closeSettings();
+		useBridge({});
+		await actions.load();
+	});
+
+	it("keeps the default model settable under a combination that names no session", async () => {
+		// `session` is the only reserved role and nothing makes a combination
+		// carry one. Without it these two keys are nobody's, so the picker has
+		// to be the one to write them or they cannot be written at all.
+		useBridge({
+			settings: async () => ({ ...settings, modelProfile: "spare", modelProfiles: [{ name: "spare", roles: [{ name: "frontier", ref: "qoder/ultimate" }] }] }),
+		});
+		await actions.load();
+
+		actions.openSettings("model");
+		await actions.loadModels();
+		expect(render()).not.toContain("the session role of spare");
+
+		actions.toggleMenu("defmodel");
+		expect(render()).toContain('data-model="anthropic/claude-opus-5"');
+
+		actions.closeMenus();
+		actions.closeSettings();
+		useBridge({});
+		await actions.load();
+	});
+
+	it("falls back to a model for the advisor when no combination is in force", async () => {
+		useBridge({ settings: async () => ({ ...settings, modelProfile: "", modelProfiles: [], advisorModel: null }) });
+		await actions.load();
+
+		actions.openSettings("model");
+		await actions.loadModels();
+		actions.toggleMenu("advisor");
+		// pi resolves this key the way it resolves --model, so with no role to
+		// name there is still a choice to offer rather than a dead row.
+		const html = render();
+		expect(html).toContain("Advisor model");
+		expect(html).not.toContain('aria-label="Advisor model"');
+		expect(html.slice(html.indexOf("Advisor model"))).toContain('data-model="anthropic/claude-opus-5"');
+
+		actions.closeMenus();
+		actions.closeSettings();
+		useBridge({});
+		await actions.load();
+	});
+
+	it("chooses the advisor's model by role, and says what the role is worth", async () => {
+		actions.openSettings("model");
+		const html = render();
+
+		expect(html).toContain('aria-label="Advisor model"');
+		// The roles of the combination in force, and only those. A model named
+		// here would be left behind by the next switch; a role follows it.
+		for (const role of activeRoles(settings)) expect(html).toContain(`<option value="${role.name}"`);
+		expect(html).not.toContain('<option value="anthropic"');
+		// And what the set role resolves to, which its name does not say.
+		expect(html.slice(html.lastIndexOf("setrole__row"))).toContain("openai-codex/gpt-5.6-sol</span>");
+
+		actions.closeSettings();
+	});
+
+	it("keeps a configured advisor that names no role", async () => {
+		useBridge({ settings: async () => ({ ...settings, advisorModel: "anthropic/claude-opus-5" }) });
+		await actions.load();
+
+		actions.openSettings("model");
+		// pi resolves this key the way it resolves --model, so a reference is
+		// legal here. Redrawing it as a role would misreport the file.
+		const html = render();
+		expect(html).toContain("anthropic/claude-opus-5 — no role of that name");
+
+		actions.closeSettings();
+		useBridge({});
+		await actions.load();
+	});
+
 	it("asks pi for its models once a run", async () => {
 		await actions.loadModels();
 
@@ -522,12 +670,17 @@ describe("App", () => {
 	});
 
 	it("keeps showing a configured model pi no longer lists", async () => {
-		useBridge({ settings: async () => ({ ...settings, defaultProvider: "retired", defaultModel: "old-one" }) });
+		useBridge({
+			settings: async () => ({
+				...settings,
+				modelProfiles: [{ name: "openai", roles: [{ name: "session", ref: "retired/old-one" }] }],
+			}),
+		});
 		await actions.load();
 
-		actions.openSettings("model");
+		actions.openSettings("combos");
 		await actions.loadModels();
-		actions.toggleMenu("defmodel");
+		actions.toggleMenu("role:openai:session");
 
 		// Without a row of its own the panel would look as though nothing were
 		// configured, while pi's settings said otherwise.
@@ -538,6 +691,7 @@ describe("App", () => {
 		expect(html).toContain("brand brand--none");
 
 		actions.closeMenus();
+		actions.closeSettings();
 
 		useBridge({});
 		await actions.load();

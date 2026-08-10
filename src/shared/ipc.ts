@@ -18,6 +18,9 @@ export const CHANNELS = {
 	models: "pi:models",
 	setDefaultModel: "pi:set-default-model",
 	setDefaultThinking: "pi:set-default-thinking",
+	setAdvisorModel: "pi:set-advisor-model",
+	setActiveProfile: "pi:set-active-profile",
+	setRoleModel: "pi:set-role-model",
 	chooseDirectory: "app:choose-directory",
 	branchOf: "git:branch",
 	termStart: "term:start",
@@ -79,6 +82,12 @@ export interface PiApi {
 	setDefaultModel(provider: string, modelId: string): Promise<void>;
 	/** How hard pi thinks in a session it has just started. */
 	setDefaultThinkingLevel(level: ThinkingLevel): Promise<void>;
+	/** The model the advisor extension consults — a role name, or a reference. */
+	setAdvisorModel(model: string): Promise<void>;
+	/** Put a combination in force, and pi's own keys on its `session` role. */
+	setActiveProfile(name: string): Promise<void>;
+	/** Point one role of one combination at a model. `ref` is `provider/id[:level]`. */
+	setRoleModel(profile: string, role: string, ref: string): Promise<void>;
 	/** The native folder chooser. Null when the user backed out. */
 	chooseDirectory(): Promise<string | null>;
 	/** The git branch of any directory, or null when it is not a repository. */

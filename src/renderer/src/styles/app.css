@@ -2633,6 +2633,116 @@ a:hover {
 /* A settings row that is a control rather than a reading. */
 .setpick {
 	padding: 4px 11px 8px;
+	/* The rows above and below it are readings. A control that runs into them
+	   reads as one of them. */
+	margin: 10px 0 14px;
+}
+/* The same groove as the composer's chip, at the same size: the panel is three
+   times as wide as it, and a slider stretched across all of it looks like a
+   progress bar. The heading and the note keep the full width — they are text. */
+.setpick .effort__ends,
+.setpick .effort__slider {
+	max-width: 288px;
+}
+/* Which model the advisor consults. A role, so it needs its own line to say
+   what that role is worth today. */
+.setrole {
+	padding: 0 11px;
+}
+.setrole__row {
+	align-items: center;
+	padding-left: 0;
+	padding-right: 0;
+	cursor: default;
+}
+.setrole__pick {
+	width: auto;
+	min-width: 104px;
+	flex: none;
+	margin-left: auto;
+}
+/* Its own, not the skills table's: restyling that column must not reach in here. */
+.setrole__select {
+	border: 1px solid var(--line-2);
+	border-radius: 7px;
+	background: var(--card-hi);
+	padding: 4px 6px;
+	font-family: inherit;
+	font-size: 11.5px;
+	color: var(--fg-0);
+	cursor: pointer;
+}
+.setrole__select:hover {
+	border-color: var(--line-3);
+}
+.setrole__label {
+	padding: 0 0 6px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--fg-0);
+}
+/* The combinations: which one is in force, and what each job runs on. */
+.combo__tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+.combo__tab {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	height: 30px;
+	padding: 0 12px;
+	border-radius: 8px;
+	border: 1px solid var(--line-2);
+	background: transparent;
+	color: var(--fg-2);
+	font-family: inherit;
+	font-size: 12.5px;
+	cursor: pointer;
+}
+.combo__tab:hover {
+	background: var(--card);
+}
+.combo__tab--on {
+	background: var(--card-hi);
+	border-color: var(--line-3);
+	color: var(--fg-0);
+	font-weight: 500;
+}
+/* Which one pi is actually on, which is not the same as the one being read. */
+.combo__live {
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--accent-hi);
+}
+.combo__role {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+.combo__role-name {
+	width: 76px;
+	flex: none;
+	padding-top: 15px;
+	font-family: var(--code);
+	font-size: 12px;
+	color: var(--fg-2);
+}
+.combo__role .modelpick {
+	flex: 1;
+	min-width: 0;
+}
+.combo__foot {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 8px;
+}
+.combo__foot .effort__note {
+	margin-top: 0;
 }
 .modelrow {
 	align-items: center;

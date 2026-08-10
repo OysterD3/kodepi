@@ -32,9 +32,10 @@ import { api } from "./api";
 import type { Appearance } from "./theme";
 import { nextTheme, prefersDark, resolveTheme } from "./theme";
 
-export type MenuId = "view" | "model" | "effort" | "access" | "newdir" | "defmodel";
+/** `role:<name>` is one row of the combinations panel; there is one per role. */
+export type MenuId = "view" | "model" | "effort" | "access" | "newdir" | "defmodel" | "advisor" | `role:${string}`;
 
-export type SettingsSection = "model" | "permissions" | "skills" | "workflows" | "about";
+export type SettingsSection = "model" | "combos" | "permissions" | "skills" | "workflows" | "about";
 
 export interface AppState {
 	readonly prefs: Preferences;
@@ -276,10 +277,29 @@ function setPrefs(patch: Partial<Preferences>): void {
 	set({ prefs: { ...state.prefs, ...patch } });
 }
 
+/**
+ * One write to pi's settings, and what the file says afterwards.
+ *
+ * Every setting this app writes goes through here. The menu shuts at once —
+ * the write is pi's file, not this window's, and waiting for it would leave a
+ * list hanging open on a click — and the settings are read back rather than
+ * patched, so the panel shows the file and not what was asked of it.
+ */
+async function writeSettings(write: () => Promise<void>): Promise<void> {
+	set({ menu: null });
+	try {
+		await write();
+		set({ settings: await api.settings() });
+	} catch (error) {
+		set({ notice: errorMessage(error) });
+	}
+}
+
 /** A settings panel that reads something outside the store asks for it on arrival. */
 function loadSection(section: SettingsSection): void {
 	if (section === "skills") void actions.loadSkills();
-	if (section === "model") void actions.loadModels();
+	// Both panels choose a model, and both need pi's list to choose from.
+	if (section === "model" || section === "combos") void actions.loadModels();
 }
 
 export const actions = {
@@ -502,16 +522,8 @@ export const actions = {
 	 * Settings are read back rather than patched here, so the panel shows what
 	 * the file says and not what this app asked for.
 	 */
-	async setDefaultModel(provider: string, modelId: string): Promise<void> {
-		// Shut the list at once. The write is pi's file, not this window's, and
-		// waiting for it would leave the menu hanging open on a click.
-		set({ menu: null });
-		try {
-			await api.setDefaultModel(provider, modelId);
-			set({ settings: await api.settings() });
-		} catch (error) {
-			set({ notice: errorMessage(error) });
-		}
+	setDefaultModel(provider: string, modelId: string): Promise<void> {
+		return writeSettings(() => api.setDefaultModel(provider, modelId));
 	},
 
 	/**
@@ -520,13 +532,35 @@ export const actions = {
 	 * Not the same setting as the composer's slider: that one moves a running
 	 * pi and dies with it. This one is a line in pi's settings file.
 	 */
-	async setDefaultThinkingLevel(level: ThinkingLevel): Promise<void> {
-		try {
-			await api.setDefaultThinkingLevel(level);
-			set({ settings: await api.settings() });
-		} catch (error) {
-			set({ notice: errorMessage(error) });
-		}
+	setDefaultThinkingLevel(level: ThinkingLevel): Promise<void> {
+		return writeSettings(() => api.setDefaultThinkingLevel(level));
+	},
+
+	/**
+	 * Put a combination in force.
+	 *
+	 * The same write `/provider` makes: the active profile, and pi's own default
+	 * model from its `session` role. A chat already running keeps the model it
+	 * started on — pi holds that in memory, and this app cannot hand it another.
+	 */
+	setActiveProfile(name: string): Promise<void> {
+		return writeSettings(() => api.setActiveProfile(name));
+	},
+
+	/** Point one role of one combination at a model. */
+	setRoleModel(profile: string, role: string, ref: string): Promise<void> {
+		return writeSettings(() => api.setRoleModel(profile, role, ref));
+	},
+
+	/**
+	 * Which model the advisor consults.
+	 *
+	 * A role name where a combination is in force, so it follows the provider
+	 * the rest of this config is on. Sessions already running keep the advisor
+	 * they started with.
+	 */
+	setAdvisorModel(model: string): Promise<void> {
+		return writeSettings(() => api.setAdvisorModel(model));
 	},
 
 	/** Read the skill directories, unless this directory is already read. */
